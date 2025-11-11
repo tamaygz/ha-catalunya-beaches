@@ -1,0 +1,1164 @@
+{
+  "error": false,
+  "items": {
+    "playa": {
+      "existe": "S",
+      "id": 153,
+      "costa": 2,
+      "municipio": "Barcelona",
+      "nombre": "Platja de la Nova Mar Bella",
+      "descriptionToast": "Jellyfish species have been detected in the water.",
+      "pdf": {
+        "pdf_analisis": "https://info.aca.gencat.cat/ca/aca/informacio/platgescat/qualitat/",
+        "pdf_perfil_bany": "https://info.aca.gencat.cat/ca/aca/informacio/platgescat/perfils-platges/08019A.pdf",
+        "nom_platja": "Platja de la Nova Mar Bella"
+      },
+      "periodosAnalisis": [
+        {
+          "anyo": 2025,
+          "datainici": "02/06/2025",
+          "datafi": "15/06/2025"
+        },
+        {
+          "anyo": 2025,
+          "datainici": "16/06/2025",
+          "datafi": "29/06/2025"
+        },
+        {
+          "anyo": 2025,
+          "datainici": "30/06/2025",
+          "datafi": "13/07/2025"
+        },
+        {
+          "anyo": 2025,
+          "datainici": "14/07/2025",
+          "datafi": "27/07/2025"
+        },
+        {
+          "anyo": 2025,
+          "datainici": "28/07/2025",
+          "datafi": "03/08/2025"
+        },
+        {
+          "anyo": 2025,
+          "datainici": "04/08/2025",
+          "datafi": "17/08/2025"
+        },
+        {
+          "anyo": 2025,
+          "datainici": "18/08/2025",
+          "datafi": "31/08/2025"
+        },
+        {
+          "anyo": 2025,
+          "datainici": "01/09/2025",
+          "datafi": "14/09/2025"
+        },
+        {
+          "anyo": 2025,
+          "datainici": "15/09/2025",
+          "datafi": "30/09/2025"
+        },
+        {
+          "anyo": 2025,
+          "datainici": "01/01/2025",
+          "datafi": "01/06/2025"
+        },
+        {
+          "anyo": 2025,
+          "datainici": "01/10/2025",
+          "datafi": "31/12/2025"
+        }
+      ],
+      "imatgesPlatja": [
+        {
+          "id": 153,
+          "url": "B39505_Barcelona_NovaMarBella_general.jpg",
+          "orden": 0
+        },
+        {
+          "id": 443,
+          "url": "B39505_Barcelona_NovaMarBella1.jpg",
+          "orden": 1
+        },
+        {
+          "id": 725,
+          "url": "B39505_Barcelona_NovaMarBella2.jpg",
+          "orden": 2
+        },
+        {
+          "id": 973,
+          "url": "B39505_Barcelona_NovaMarBella3.jpg",
+          "orden": 3
+        },
+        {
+          "id": 1151,
+          "url": "B39505_Barcelona_NovaMarBella4.jpg",
+          "orden": 4
+        }
+      ],
+      "coordenadasPC": [
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "coordenadax": 2.2152314154427,
+          "coordenaday": 41.401868963879
+        }
+      ],
+      "tablaAnalisis": [
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2021-05-31 09:08:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "19",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2021,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2021-06-14 11:16:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "23",
+          "ef": "10",
+          "ec": "20",
+          "codigoestado": "Excellent",
+          "anyo": 2021,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2021-06-28 08:50:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "22",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2021,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2021-07-05 08:38:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "23.5",
+          "ef": "10",
+          "ec": "53",
+          "codigoestado": "Excellent",
+          "anyo": 2021,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2021-07-19 08:16:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "24",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2021,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2021-08-02 08:18:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "23.5",
+          "ef": "30",
+          "ec": "231",
+          "codigoestado": "Excellent",
+          "anyo": 2021,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2021-08-16 08:55:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.9",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2021,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2021-08-30 08:13:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "24",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2021,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2021-09-13 08:13:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "24.5",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2021,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2022-06-13 09:30:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "22.8",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2022,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2022-06-27 08:48:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "24.4",
+          "ef": "42",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2022,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2022-07-11 08:31:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "23.8",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2022,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2022-07-18 08:30:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.5",
+          "ef": "31",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2022,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2022-07-25 08:23:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2022,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2022-08-08 08:22:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "24.7",
+          "ef": "20",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2022,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2022-08-22 08:29:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.5",
+          "ef": "110",
+          "ec": "243",
+          "codigoestado": "Good",
+          "anyo": 2022,
+          "calidadsanitaria": "8"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2022-09-05 08:50:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.9",
+          "ef": "64",
+          "ec": "64",
+          "codigoestado": "Excellent",
+          "anyo": 2022,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2022-09-20 08:40:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "24.8",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2022,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-06-12 08:50:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "21.5",
+          "ef": "53",
+          "ec": "99",
+          "codigoestado": "Excellent",
+          "anyo": 2023,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-06-26 08:46:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "24.4",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2023,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-07-10 09:00:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.6",
+          "ef": "10",
+          "ec": "20",
+          "codigoestado": "Excellent",
+          "anyo": 2023,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-07-17 08:38:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.9",
+          "ef": "31",
+          "ec": "20",
+          "codigoestado": "Excellent",
+          "anyo": 2023,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-07-31 08:37:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.3",
+          "ef": "10",
+          "ec": "344",
+          "codigoestado": "Good",
+          "anyo": 2023,
+          "calidadsanitaria": "8"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-08-07 08:10:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.5",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2023,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-08-21 08:05:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "27.5",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2023,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-09-04 08:35:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "27",
+          "ef": "207",
+          "ec": "31",
+          "codigoestado": "Temporary disturbance (Rain)",
+          "anyo": 2023,
+          "calidadsanitaria": "6"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-09-06 08:00:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.6",
+          "ef": "20",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2023,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-09-07 10:00:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.6",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2023,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2023-09-18 08:11:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.7",
+          "ef": "52",
+          "ec": "41",
+          "codigoestado": "Excellent",
+          "anyo": 2023,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2024-06-03 09:55:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "21.3",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2024,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2024-06-17 09:55:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "22.3",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2024,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2024-07-01 09:50:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "24.5",
+          "ef": "10",
+          "ec": "31",
+          "codigoestado": "Excellent",
+          "anyo": 2024,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2024-07-15 11:25:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "24.3",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2024,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2024-07-29 09:50:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.4",
+          "ef": "10",
+          "ec": "20",
+          "codigoestado": "Excellent",
+          "anyo": 2024,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2024-08-05 09:45:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.4",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2024,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2024-08-19 10:00:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.3",
+          "ef": "41",
+          "ec": "160",
+          "codigoestado": "Excellent",
+          "anyo": 2024,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2024-09-02 10:25:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.6",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2024,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2024-09-16 09:29:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.5",
+          "ef": "10",
+          "ec": "20",
+          "codigoestado": "Excellent",
+          "anyo": 2024,
+          "calidadsanitaria": "9"
+        }
+      ],
+      "anyosTablaAnalisis": [2024, 2023, 2022, 2021],
+      "tablaAnalisisTemporadaCurso": [
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2025-06-02 10:00:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "20.6",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2025,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2025-06-16 09:45:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2025,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2025-06-30 10:15:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.7",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2025,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2025-07-14 08:25:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.4",
+          "ef": "20",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2025,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2025-07-28 09:45:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.9",
+          "ef": "146",
+          "ec": "11",
+          "codigoestado": "Good",
+          "anyo": 2025,
+          "calidadsanitaria": "8"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2025-08-04 09:45:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.6",
+          "ef": "52",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2025,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2025-08-18 08:25:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26.8",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2025,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2025-09-01 08:35:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "26",
+          "ef": "10",
+          "ec": "10",
+          "codigoestado": "Excellent",
+          "anyo": 2025,
+          "calidadsanitaria": "9"
+        },
+        {
+          "id": "08019A1",
+          "nombrepunto": "mig platja",
+          "fechadato": {
+            "date": "2025-09-15 08:43:00.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temperaturaagua": "25.1",
+          "ef": "10",
+          "ec": "20",
+          "codigoestado": "Excellent",
+          "anyo": 2025,
+          "calidadsanitaria": "9"
+        }
+      ],
+      "informacioData": [
+        {
+          "id": 744,
+          "titulo": "Recommendations in case of rain",
+          "fechaModificacion": {
+            "date": "2025-11-08 09:55:55.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temp_leer": 1,
+          "icono": null,
+          "categoria_trad": "_AGUA_",
+          "categoria": "_AGUA_",
+          "contenido": "",
+          "resum": ""
+        },
+        {
+          "id": 57,
+          "titulo": "The quality of bathing water",
+          "fechaModificacion": {
+            "date": "2025-10-31 14:10:51.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temp_leer": 2,
+          "icono": "card-img2.jpg",
+          "categoria_trad": "_AGUA_",
+          "categoria": "_AGUA_",
+          "contenido": "",
+          "resum": ""
+        },
+        {
+          "id": 826,
+          "titulo": "Informative bulletins",
+          "fechaModificacion": {
+            "date": "2025-10-28 11:15:54.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temp_leer": 1,
+          "icono": null,
+          "categoria_trad": "_AGUA_",
+          "categoria": "_AGUA_",
+          "contenido": "",
+          "resum": ""
+        },
+        {
+          "id": 765,
+          "titulo": "Personal safety and care for the environment",
+          "fechaModificacion": {
+            "date": "2025-10-25 15:39:23.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temp_leer": 1,
+          "icono": null,
+          "categoria_trad": "_AGUA_",
+          "categoria": "_AGUA_",
+          "contenido": "",
+          "resum": ""
+        },
+        {
+          "id": 749,
+          "titulo": "Caution notices for incidences",
+          "fechaModificacion": {
+            "date": "2025-10-19 22:13:40.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temp_leer": 1,
+          "icono": "card-img2.jpg",
+          "categoria_trad": "_AGUA_",
+          "categoria": "_AGUA_",
+          "contenido": "",
+          "resum": ""
+        },
+        {
+          "id": 705,
+          "titulo": "Jellyfish",
+          "fechaModificacion": {
+            "date": "2025-10-15 14:24:08.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temp_leer": 2,
+          "icono": "card-img2.jpg",
+          "categoria_trad": "_AGUA_",
+          "categoria": "_AGUA_",
+          "contenido": "",
+          "resum": ""
+        },
+        {
+          "id": 747,
+          "titulo": "Caution notices for rains",
+          "fechaModificacion": {
+            "date": "2025-09-30 12:14:42.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temp_leer": 1,
+          "icono": "card-img2.jpg",
+          "categoria_trad": "_AGUA_",
+          "categoria": "_AGUA_",
+          "contenido": "",
+          "resum": ""
+        },
+        {
+          "id": 664,
+          "titulo": "Most common natural phenomena at beaches and bathing areas",
+          "fechaModificacion": {
+            "date": "2025-09-30 12:11:30.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temp_leer": 4,
+          "icono": null,
+          "categoria_trad": "_AGUA_",
+          "categoria": "_AGUA_",
+          "contenido": "",
+          "resum": ""
+        },
+        {
+          "id": 746,
+          "titulo": "Preventing and treating bites",
+          "fechaModificacion": {
+            "date": "2025-09-30 12:11:22.000000",
+            "timezone_type": 3,
+            "timezone": "Europe/Madrid"
+          },
+          "temp_leer": 1,
+          "icono": null,
+          "categoria_trad": "_AGUA_",
+          "categoria": "_AGUA_",
+          "contenido": "",
+          "resum": ""
+        }
+      ],
+      "descripcioPlatja": "It is part of the series of beaches that were recovered along the coastline of Barcelona as part of the urban renovation that took place for the Barcelona Olympic Games. It sits between two breakwaters: one that separates it from Llevant Beach to the northeast, and another, the Bac de Roda breakwater, which separates it from La Mar Bella Beach to the southwest. ",
+      "playascercanas": [
+        {
+          "id": 152,
+          "nombre": "de Llevant",
+          "costaid": 2,
+          "descripcion": "It is the last beach of those created along the Barcelona coastline, and was introduced to the city in the summer of 2006. The beach is bounded by a breakwater (which separates it from the site of the future marine zoo) to the northeast and by another breakwater to the southwest, which separates it from La Nova Mar Bella Beach. ",
+          "distancia": 0.4,
+          "favorita": false,
+          "imagen_url": "B39405_Barcelona_Llevant_general.jpg",
+          "costa": "Costa Barcelona Nord"
+        },
+        {
+          "id": 154,
+          "nombre": "La Mar Bella Beach ",
+          "costaid": 2,
+          "descripcion": "This is one of the beaches that were created as part of the urban remodelling of the coastline that took place in 1992 for the Barcelona Olympic Games. It sits between two breakwaters: the Bac de Roda breakwater to the northeast, which separates it from La Nova Mar Bella Beach; and the El Ferrocarril breakwater to the southwest, which separates it from Bogatell Beach. ",
+          "distancia": 0.45,
+          "favorita": false,
+          "imagen_url": "B39605_Barcelona_MarBella_general.jpg",
+          "costa": "Costa Barcelona Nord"
+        },
+        {
+          "id": 155,
+          "nombre": "Bogatell Beach ",
+          "costaid": 2,
+          "descripcion": "This is one of the beaches that acquired a new status when the remodelling of the Barcelona coastline took place during the nineties. It sits between two breakwaters: the El Ferrocarril breakwater to the northeast, which separates it from La Mar Bella Beach; and the Bogatell breakwater to the southwest, which separates it from La Nova Icària Beach. ",
+          "distancia": 1.15,
+          "favorita": false,
+          "imagen_url": "B39705_Barcelona_Bogatell_general.jpg",
+          "costa": "Costa Barcelona Nord"
+        }
+      ],
+      "tablaValoracionPlaya": [
+        {
+          "anyo": 2024,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2023,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2022,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2021,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2020,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2019,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2018,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2017,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2016,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2015,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2014,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2013,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2012,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2011,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2010,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2009,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        },
+        {
+          "anyo": 2008,
+          "calidadcontroladadesde": 1991,
+          "traduccion": "Excellent"
+        }
+      ],
+      "calidadcontroladadesde": 1991,
+      "caracteristicasFisicas": {
+        "tipoplaya": "Beach",
+        "tipoarena": "Coarse",
+        "entorno": "Urban",
+        "pendienteentradaagua": "Very strong",
+        "orientacion": "SSE",
+        "longitud": "265",
+        "anchuramedia": "45",
+        "paseomaritimo": "No",
+        "caminoronda": "No",
+        "socorrismo": "Yes"
+      },
+      "caracteristicasAmbientales": {
+        "riesgoalteracioncalidadporlluvias": "High",
+        "riesgoproliferacionfitoplacton": "Low",
+        "temperaturamediaaguajunio": 20.1,
+        "temperaturamediaaguajulio": 23.6,
+        "temperaturamediaaguaagosto": 23.9,
+        "temperaturamediaaguaseptiembre": 23.3
+      }
+    },
+    "medusas": {
+      "icono": "icono_-32(46).png",
+      "peligrosidadTrad": "Out of season",
+      "peligrosidadEtiqueta": "_FORA_DE_TEMPORADA_",
+      "fechaModificacion": {
+        "date": "2025-09-28 12:20:35.000000",
+        "timezone_type": 3,
+        "timezone": "Europe/Madrid"
+      },
+      "llistatMeduses": []
+    },
+    "calidadPlaya": {
+      "estado_etiqueta": "_FORA_DE_TEMPORADA_",
+      "estado": "Out of season",
+      "estado_info_etiqueta": "_FORA_DE_TEMPORADA_",
+      "estado_info": "Out of season",
+      "a_destacar_etiqueta": null,
+      "a_destacar": null,
+      "altres_afeccions": "_ALTRES_AFECCIONS_",
+      "timestamp_calidad": {
+        "date": "2025-09-29 09:56:01.000000",
+        "timezone_type": 3,
+        "timezone": "Europe/Madrid"
+      },
+      "icono": "fora-temporada.png"
+    },
+    "estadoPlaya": {
+      "temperatura": 14.1,
+      "fecha": "11/11/2025",
+      "hora": "08:00",
+      "timestampPre": {
+        "date": "2025-11-11 08:02:35.000000",
+        "timezone_type": 3,
+        "timezone": "Europe/Madrid"
+      },
+      "etiquetaCielo": "_20_",
+      "iconoCielo": "icono_2-56(2).png",
+      "temperaturaAgua": 24.7,
+      "timestampAgua": {
+        "date": "2025-09-28 10:30:00.000000",
+        "timezone_type": 3,
+        "timezone": "Europe/Madrid"
+      },
+      "traduccionCielo": "Moderate to high cloud cover"
+    },
+    "estadoMar": {
+      "alturaolas": 0.3,
+      "direccionolas": 335.9,
+      "velocidadviento": 1.1,
+      "direccionviento": 318.4,
+      "uvminimo": "0",
+      "uvmaximo": "0",
+      "uv_max_literal": "Low",
+      "uv_min_literal": "Low"
+    },
+    "foraTemporada": true,
+    "iconos": {
+      "estat_aigua_noinfo": "fora-temporada.png",
+      "estat_aigua_bona": "bonescondicions-mapa.png",
+      "estat_aigua_precauci": "precaucio-mapa.png",
+      "meduses_sense_presencia": "icono_-43.png",
+      "meduses_sense_perill": "icono_-44.png",
+      "meduses_amb_perill": "icono_-45.png",
+      "meduses_molt_perill": "icono_-46.png",
+      "meduses_noinfo": "icono_-32(46).png"
+    }
+  }
+}
