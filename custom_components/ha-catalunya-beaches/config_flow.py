@@ -187,20 +187,50 @@ class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=[
-                                {"value": ENTITY_WATER_TEMP, "label": "Water Temperature"},
+                                {
+                                    "value": ENTITY_WATER_TEMP,
+                                    "label": "Water Temperature",
+                                },
                                 {"value": ENTITY_AIR_TEMP, "label": "Air Temperature"},
-                                {"value": ENTITY_WATER_QUALITY, "label": "Water Quality Status"},
+                                {
+                                    "value": ENTITY_WATER_QUALITY,
+                                    "label": "Water Quality Status",
+                                },
                                 {"value": ENTITY_UV_INDEX, "label": "UV Index"},
                                 {"value": ENTITY_WAVE_HEIGHT, "label": "Wave Height"},
                                 {"value": ENTITY_WIND_SPEED, "label": "Wind Speed"},
-                                {"value": ENTITY_SKY_CONDITION, "label": "Sky Condition"},
-                                {"value": ENTITY_JELLYFISH_STATUS, "label": "Jellyfish Status"},
-                                {"value": ENTITY_LAST_TEST_DATE, "label": "Last Water Test Date"},
-                                {"value": ENTITY_DESCRIPTION, "label": "Beach Description"},
-                                {"value": ENTITY_LIFEGUARD, "label": "Lifeguard Present"},
-                                {"value": ENTITY_OUT_OF_SEASON, "label": "Out of Season"},
-                                {"value": ENTITY_WATER_QUALITY_GOOD, "label": "Water Quality Good"},
-                                {"value": ENTITY_JELLYFISH_ALERT, "label": "Jellyfish Alert"},
+                                {
+                                    "value": ENTITY_SKY_CONDITION,
+                                    "label": "Sky Condition",
+                                },
+                                {
+                                    "value": ENTITY_JELLYFISH_STATUS,
+                                    "label": "Jellyfish Status",
+                                },
+                                {
+                                    "value": ENTITY_LAST_TEST_DATE,
+                                    "label": "Last Water Test Date",
+                                },
+                                {
+                                    "value": ENTITY_DESCRIPTION,
+                                    "label": "Beach Description",
+                                },
+                                {
+                                    "value": ENTITY_LIFEGUARD,
+                                    "label": "Lifeguard Present",
+                                },
+                                {
+                                    "value": ENTITY_OUT_OF_SEASON,
+                                    "label": "Out of Season",
+                                },
+                                {
+                                    "value": ENTITY_WATER_QUALITY_GOOD,
+                                    "label": "Water Quality Good",
+                                },
+                                {
+                                    "value": ENTITY_JELLYFISH_ALERT,
+                                    "label": "Jellyfish Alert",
+                                },
                                 {"value": ENTITY_RAIN_RISK, "label": "High Rain Risk"},
                             ],
                             multiple=True,
@@ -242,18 +272,34 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Configure beach options."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             if user_input.get("force_refresh"):
-                # Trigger force refresh
-                coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id].coordinator
-                await coordinator.async_force_refresh()
-                return self.async_create_entry(title="", data=self.config_entry.options)
+                # Trigger force refresh. The coordinator is created during setup of the
+                # config entry and stored in `hass.data[DOMAIN][entry_id]`. It's possible
+                # the integration is not fully set up yet, so guard against missing data.
+                try:
+                    coordinator = self.hass.data[DOMAIN][
+                        self.config_entry.entry_id
+                    ].coordinator
+                    await coordinator.async_force_refresh()
+                    return self.async_create_entry(
+                        title="", data=self.config_entry.options
+                    )
+                except Exception:  # pragma: no cover - defensive handling
+                    LOGGER.exception(
+                        "Coordinator not available for %s when forcing refresh",
+                        self.config_entry.entry_id,
+                    )
+                    errors["base"] = "not_configured"
 
             if user_input.get("delete_history"):
                 return await self.async_step_confirm_delete()
 
-            # Update options
-            return self.async_create_entry(title="", data=user_input)
+            # If there were no errors (e.g. missing coordinator), update options.
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
 
         current_interval = self.config_entry.options.get(
             CONF_UPDATE_INTERVAL,
@@ -281,20 +327,50 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=[
-                                {"value": ENTITY_WATER_TEMP, "label": "Water Temperature"},
+                                {
+                                    "value": ENTITY_WATER_TEMP,
+                                    "label": "Water Temperature",
+                                },
                                 {"value": ENTITY_AIR_TEMP, "label": "Air Temperature"},
-                                {"value": ENTITY_WATER_QUALITY, "label": "Water Quality Status"},
+                                {
+                                    "value": ENTITY_WATER_QUALITY,
+                                    "label": "Water Quality Status",
+                                },
                                 {"value": ENTITY_UV_INDEX, "label": "UV Index"},
                                 {"value": ENTITY_WAVE_HEIGHT, "label": "Wave Height"},
                                 {"value": ENTITY_WIND_SPEED, "label": "Wind Speed"},
-                                {"value": ENTITY_SKY_CONDITION, "label": "Sky Condition"},
-                                {"value": ENTITY_JELLYFISH_STATUS, "label": "Jellyfish Status"},
-                                {"value": ENTITY_LAST_TEST_DATE, "label": "Last Water Test Date"},
-                                {"value": ENTITY_DESCRIPTION, "label": "Beach Description"},
-                                {"value": ENTITY_LIFEGUARD, "label": "Lifeguard Present"},
-                                {"value": ENTITY_OUT_OF_SEASON, "label": "Out of Season"},
-                                {"value": ENTITY_WATER_QUALITY_GOOD, "label": "Water Quality Good"},
-                                {"value": ENTITY_JELLYFISH_ALERT, "label": "Jellyfish Alert"},
+                                {
+                                    "value": ENTITY_SKY_CONDITION,
+                                    "label": "Sky Condition",
+                                },
+                                {
+                                    "value": ENTITY_JELLYFISH_STATUS,
+                                    "label": "Jellyfish Status",
+                                },
+                                {
+                                    "value": ENTITY_LAST_TEST_DATE,
+                                    "label": "Last Water Test Date",
+                                },
+                                {
+                                    "value": ENTITY_DESCRIPTION,
+                                    "label": "Beach Description",
+                                },
+                                {
+                                    "value": ENTITY_LIFEGUARD,
+                                    "label": "Lifeguard Present",
+                                },
+                                {
+                                    "value": ENTITY_OUT_OF_SEASON,
+                                    "label": "Out of Season",
+                                },
+                                {
+                                    "value": ENTITY_WATER_QUALITY_GOOD,
+                                    "label": "Water Quality Good",
+                                },
+                                {
+                                    "value": ENTITY_JELLYFISH_ALERT,
+                                    "label": "Jellyfish Alert",
+                                },
                                 {"value": ENTITY_RAIN_RISK, "label": "High Rain Risk"},
                             ],
                             multiple=True,
@@ -317,10 +393,12 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
                 # Delete historical data
                 # This would require calling recorder service to purge entity data
                 # For now, we'll just acknowledge
-                LOGGER.info("Historical data deletion requested for beach %s", 
-                           self.config_entry.data[CONF_BEACH_NAME])
+                LOGGER.info(
+                    "Historical data deletion requested for beach %s",
+                    self.config_entry.data[CONF_BEACH_NAME],
+                )
                 # TODO: Implement actual history deletion via recorder service
-            
+
             return self.async_create_entry(title="", data=self.config_entry.options)
 
         return self.async_show_form(
