@@ -250,7 +250,7 @@ class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> CatalunyaBeachesOptionsFlow:
         """Get the options flow for this handler."""
-        return CatalunyaBeachesOptionsFlow(config_entry)
+        return CatalunyaBeachesOptionsFlow()
 
 
 class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
