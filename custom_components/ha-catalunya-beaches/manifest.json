@@ -1,10 +1,11 @@
 {
   "domain": "ha-catalunya-beaches",
-  "name": "Integration blueprint",
+  "name": "Catalunya Beach Monitoring",
   "codeowners": [
     "@ludeeus"
   ],
   "config_flow": true,
+  "options_flow": true,
   "documentation": "https://github.com/tamaygz/ha-catalunya-beaches",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/tamaygz/ha-catalunya-beaches/issues",
