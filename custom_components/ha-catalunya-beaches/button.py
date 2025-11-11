@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import LOGGER
 from .entity import CatalunyaBeachEntity
@@ -39,7 +40,7 @@ async def async_setup_entry(
 class CatalunyaBeachRefreshButton(CatalunyaBeachEntity, ButtonEntity):
     """Button to refresh beach data."""
 
-    _attr_entity_category = "diagnostic"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:refresh"
 
     def __init__(
