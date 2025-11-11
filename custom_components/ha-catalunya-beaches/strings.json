@@ -1,0 +1,108 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Language Selection",
+        "description": "Select the language for beach information",
+        "data": {
+          "language": "Language"
+        }
+      },
+      "select_beach": {
+        "title": "Beach Selection",
+        "description": "Select a beach to monitor",
+        "data": {
+          "beach_id": "Beach"
+        }
+      },
+      "configure_entities": {
+        "title": "Entity Configuration",
+        "description": "Configure update interval and select entities to enable for {beach_name}",
+        "data": {
+          "update_interval": "Update Interval (seconds)",
+          "enabled_entities": "Enabled Entities"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Catalunya Beaches API",
+      "invalid_beach": "Invalid beach selected",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This beach is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "configure": {
+        "title": "Beach Options",
+        "description": "Configure update interval and enabled entities",
+        "data": {
+          "update_interval": "Update Interval (seconds)",
+          "enabled_entities": "Enabled Entities",
+          "force_refresh": "Force Refresh Data Now",
+          "delete_history": "Delete All Historical Data"
+        }
+      },
+      "confirm_delete": {
+        "title": "Confirm Delete",
+        "description": "Are you sure you want to delete all historical data for {beach_name}?",
+        "data": {
+          "confirm": "Confirm deletion"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "water_temperature": {
+        "name": "Water Temperature"
+      },
+      "air_temperature": {
+        "name": "Air Temperature"
+      },
+      "water_quality": {
+        "name": "Water Quality"
+      },
+      "uv_index": {
+        "name": "UV Index"
+      },
+      "wave_height": {
+        "name": "Wave Height"
+      },
+      "wind_speed": {
+        "name": "Wind Speed"
+      },
+      "sky_condition": {
+        "name": "Sky Condition"
+      },
+      "jellyfish_status": {
+        "name": "Jellyfish Status"
+      },
+      "last_test_date": {
+        "name": "Last Water Test Date"
+      },
+      "description": {
+        "name": "Beach Description"
+      }
+    },
+    "binary_sensor": {
+      "lifeguard_present": {
+        "name": "Lifeguard Present"
+      },
+      "out_of_season": {
+        "name": "Out of Season"
+      },
+      "water_quality_good": {
+        "name": "Water Quality Good"
+      },
+      "jellyfish_alert": {
+        "name": "Jellyfish Alert"
+      },
+      "rain_risk_high": {
+        "name": "Rain Risk High"
+      }
+    }
+  }
+}
