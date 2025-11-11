@@ -300,6 +300,7 @@ class BeachInfo:
     coordenadas: tuple[float, float] | None
     fora_temporada: bool
     imagenes: list[str]
+    iconos: dict[str, str]
     calidad_playa: WaterQuality | None
     medusas: JellyfishStatus | None
     condiciones: WeatherConditions | None
@@ -335,6 +336,9 @@ class BeachInfo:
         imagenes = []
         if imgs := playa.get("imatgesPlatja"):
             imagenes = [img.get("url", "") for img in imgs if img.get("url")]
+
+        # Extract icons
+        iconos = items.get("iconos", {})
 
         # Parse nested structures
         calidad_playa = None
@@ -377,6 +381,7 @@ class BeachInfo:
             coordenadas=coordenadas,
             fora_temporada=items.get("foraTemporada", False),
             imagenes=imagenes,
+            iconos=iconos,
             calidad_playa=calidad_playa,
             medusas=medusas,
             condiciones=condiciones,

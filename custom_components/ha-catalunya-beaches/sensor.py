@@ -335,6 +335,43 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                 attributes["municipality"] = beach_info.municipio
                 attributes["coast"] = beach_info.costa
 
+                # Add images and icons
+                if beach_info.imagenes:
+                    attributes["images"] = beach_info.imagenes
+                    attributes["image_count"] = len(beach_info.imagenes)
+                    attributes["primary_image"] = (
+                        beach_info.imagenes[0] if beach_info.imagenes else None
+                    )
+
+                if beach_info.iconos:
+                    # Water quality icons
+                    attributes["icon_water_no_info"] = beach_info.iconos.get(
+                        "estat_aigua_noinfo"
+                    )
+                    attributes["icon_water_good"] = beach_info.iconos.get(
+                        "estat_aigua_bona"
+                    )
+                    attributes["icon_water_caution"] = beach_info.iconos.get(
+                        "estat_aigua_precauci"
+                    )
+
+                    # Jellyfish icons
+                    attributes["icon_jellyfish_none"] = beach_info.iconos.get(
+                        "meduses_sense_presencia"
+                    )
+                    attributes["icon_jellyfish_safe"] = beach_info.iconos.get(
+                        "meduses_sense_perill"
+                    )
+                    attributes["icon_jellyfish_danger"] = beach_info.iconos.get(
+                        "meduses_amb_perill"
+                    )
+                    attributes["icon_jellyfish_high_danger"] = beach_info.iconos.get(
+                        "meduses_molt_perill"
+                    )
+                    attributes["icon_jellyfish_no_info"] = beach_info.iconos.get(
+                        "meduses_noinfo"
+                    )
+
         except (AttributeError, KeyError) as err:
             LOGGER.debug("Error getting attributes for %s: %s", key, err)
 
