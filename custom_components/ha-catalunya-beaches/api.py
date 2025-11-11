@@ -115,6 +115,13 @@ class CatalunyaBeachesApiClient:
                 msg = f"API returned error for beach {beach_id}"
                 raise CatalunyaBeachesApiClientDataError(msg)
             
+            # Check if beach exists in response
+            items = data.get("items", {})
+            playa = items.get("playa", {})
+            if playa.get("existe") == "N":
+                msg = f"Beach {beach_id} does not exist"
+                raise CatalunyaBeachesApiClientDataError(msg)
+            
             return BeachInfo.from_dict(data)
             
         except CatalunyaBeachesApiClientError:

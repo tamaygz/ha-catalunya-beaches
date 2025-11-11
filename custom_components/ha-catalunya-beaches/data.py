@@ -268,6 +268,11 @@ class BeachInfo:
         """Create BeachInfo from API response dict."""
         items = data.get("items", {})
         playa = items.get("playa", {})
+        
+        # Check if beach exists
+        if playa.get("existe") == "N":
+            msg = "Beach does not exist"
+            raise ValueError(msg)
 
         # Extract coordinates
         coordenadas = None

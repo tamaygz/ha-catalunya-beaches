@@ -73,8 +73,11 @@ WATER_QUALITY_STATUS = {
     "Excellent": "Excellent",
     "Good": "Good",
     "Sufficient": "Sufficient",
+    "Acceptable": "Acceptable",
     "Poor": "Poor",
-    "Temporary disturbance (Rain)": "Temporary disturbance",
+    "Temporary disturbance (Rain)": "Acceptable",
+    "Temporary disturbance": "Acceptable",
+    "Persistence of temporary disturbance": "Poor",
 }
 
 LIFEGUARD_STATUS = {
