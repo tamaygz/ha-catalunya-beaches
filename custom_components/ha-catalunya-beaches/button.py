@@ -67,9 +67,9 @@ class CatalunyaBeachRefreshButton(CatalunyaBeachEntity, ButtonEntity):
         if self.coordinator.last_fetched:
             attributes["last_fetched"] = self.coordinator.last_fetched.isoformat()
 
-        if self.coordinator.last_update_success_time:
+        if self.coordinator.last_update_success:
             attributes["last_update_success"] = (
-                self.coordinator.last_update_success_time.isoformat()
+                self.coordinator.last_update_success.isoformat()
             )
 
         return attributes
