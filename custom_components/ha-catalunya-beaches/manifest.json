@@ -2,12 +2,13 @@
   "domain": "ha-catalunya-beaches",
   "name": "Catalunya Beach Monitoring",
   "codeowners": [
-    "@ludeeus"
+    "@tamaygz"
   ],
   "config_flow": true,
   "options_flow": true,
   "documentation": "https://github.com/tamaygz/ha-catalunya-beaches",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/tamaygz/ha-catalunya-beaches/issues",
-  "version": "0.1.0"
+  "requirements": ["aiohttp>=3.8.0"],
+  "version": "1.0.0"
 }
