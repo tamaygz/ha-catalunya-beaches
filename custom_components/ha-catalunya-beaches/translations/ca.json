@@ -1,0 +1,140 @@
+{
+    "config": {
+        "step": {
+            "language": {
+                "title": "Selecció d'idioma",
+                "description": "Seleccioneu l'idioma per a la informació de la platja",
+                "data": {
+                    "language": "Idioma"
+                }
+            },
+            "beach": {
+                "title": "Selecció de platja",
+                "description": "Seleccioneu una platja per monitoritzar",
+                "data": {
+                    "beach_id": "Platja"
+                }
+            },
+            "entities": {
+                "title": "Configuració d'entitats",
+                "description": "Seleccioneu quines entitats voleu habilitar per a aquesta platja",
+                "data": {
+                    "enabled_entities": "Entitats habilitades",
+                    "update_interval": "Interval d'actualització (segons)"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar amb l'API de Platges de Catalunya",
+            "invalid_beach": "Platja no vàlida seleccionada",
+            "unknown": "S'ha produït un error inesperat"
+        },
+        "abort": {
+            "already_configured": "Aquesta platja ja està configurada"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Opcions de platja",
+                "description": "Configureu l'interval d'actualització i les entitats habilitades",
+                "data": {
+                    "update_interval": "Interval d'actualització (segons)",
+                    "enabled_entities": "Entitats habilitades",
+                    "force_refresh": "Forçar actualització de dades ara",
+                    "confirm_delete_history": "Eliminar totes les dades històriques"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "water_temperature": {
+                "name": "Temperatura de l'aigua"
+            },
+            "air_temperature": {
+                "name": "Temperatura de l'aire"
+            },
+            "water_quality": {
+                "name": "Qualitat de l'aigua",
+                "state": {
+                    "excellent": "Excel·lent",
+                    "good": "Bona",
+                    "acceptable": "Acceptable",
+                    "poor": "Dolenta",
+                    "very_poor": "Molt dolenta",
+                    "unknown": "Desconeguda"
+                }
+            },
+            "uv_index": {
+                "name": "Índex UV"
+            },
+            "wave_height": {
+                "name": "Alçada de les onades"
+            },
+            "wind_speed": {
+                "name": "Velocitat del vent"
+            },
+            "sky_condition": {
+                "name": "Condició del cel",
+                "state": {
+                    "clear": "Clar",
+                    "partly_cloudy": "Parcialment ennuvolat",
+                    "cloudy": "Ennuvolat",
+                    "overcast": "Cobert",
+                    "rain": "Pluja",
+                    "storm": "Tempesta",
+                    "unknown": "Desconegut"
+                }
+            },
+            "jellyfish_status": {
+                "name": "Estat de les meduses",
+                "state": {
+                    "none": "Cap",
+                    "low": "Baix",
+                    "moderate": "Moderat",
+                    "high": "Alt",
+                    "very_high": "Molt alt",
+                    "unknown": "Desconegut"
+                }
+            },
+            "last_test_date": {
+                "name": "Data de l'última prova d'aigua"
+            },
+            "description": {
+                "name": "Descripció de la platja"
+            }
+        },
+        "binary_sensor": {
+            "lifeguard_present": {
+                "name": "Socorrista present"
+            },
+            "out_of_season": {
+                "name": "Fora de temporada"
+            },
+            "water_quality_good": {
+                "name": "Bona qualitat de l'aigua"
+            },
+            "jellyfish_alert": {
+                "name": "Alerta de meduses"
+            },
+            "rain_risk_high": {
+                "name": "Alt risc de pluja"
+            }
+        }
+    },
+    "entity_component": {
+        "_": {
+            "state": {
+                "problem": {
+                    "off": "Correcte",
+                    "on": "Problema"
+                },
+                "safety": {
+                    "off": "Insegur",
+                    "on": "Segur"
+                }
+            }
+        }
+    }
+}

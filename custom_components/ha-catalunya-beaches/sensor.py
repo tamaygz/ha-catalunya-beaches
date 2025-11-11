@@ -1,57 +1,268 @@
-"""Sensor platform for ha-catalunya-beaches."""
+"""Sensor platform for Catalunya Beaches."""
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import UnitOfTemperature, UnitOfLength, UnitOfSpeed
+from homeassistant.helpers.typing import StateType
 
-from .entity import IntegrationBlueprintEntity
+from .const import (
+    CONF_ENABLED_ENTITIES,
+    ENTITY_AIR_TEMP,
+    ENTITY_DESCRIPTION,
+    ENTITY_JELLYFISH_STATUS,
+    ENTITY_LAST_TEST_DATE,
+    ENTITY_SKY_CONDITION,
+    ENTITY_UV_INDEX,
+    ENTITY_WATER_QUALITY,
+    ENTITY_WATER_TEMP,
+    ENTITY_WAVE_HEIGHT,
+    ENTITY_WIND_SPEED,
+    LOGGER,
+    SKY_CONDITIONS,
+    WATER_QUALITY_STATUS,
+)
+from .entity import CatalunyaBeachEntity
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import BlueprintDataUpdateCoordinator
-    from .data import IntegrationBlueprintConfigEntry
+    from .data import CatalunyaBeachesConfigEntry
 
-ENTITY_DESCRIPTIONS = (
-    SensorEntityDescription(
-        key="ha-catalunya-beaches",
-        name="Integration Sensor",
-        icon="mdi:format-quote-close",
+
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    ENTITY_WATER_TEMP: SensorEntityDescription(
+        key=ENTITY_WATER_TEMP,
+        name="Water Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:water-thermometer",
     ),
-)
+    ENTITY_AIR_TEMP: SensorEntityDescription(
+        key=ENTITY_AIR_TEMP,
+        name="Air Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:thermometer",
+    ),
+    ENTITY_WATER_QUALITY: SensorEntityDescription(
+        key=ENTITY_WATER_QUALITY,
+        name="Water Quality",
+        icon="mdi:water-check",
+    ),
+    ENTITY_UV_INDEX: SensorEntityDescription(
+        key=ENTITY_UV_INDEX,
+        name="UV Index",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:sun-wireless",
+    ),
+    ENTITY_WAVE_HEIGHT: SensorEntityDescription(
+        key=ENTITY_WAVE_HEIGHT,
+        name="Wave Height",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:wave",
+    ),
+    ENTITY_WIND_SPEED: SensorEntityDescription(
+        key=ENTITY_WIND_SPEED,
+        name="Wind Speed",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:weather-windy",
+    ),
+    ENTITY_SKY_CONDITION: SensorEntityDescription(
+        key=ENTITY_SKY_CONDITION,
+        name="Sky Condition",
+        icon="mdi:weather-partly-cloudy",
+    ),
+    ENTITY_JELLYFISH_STATUS: SensorEntityDescription(
+        key=ENTITY_JELLYFISH_STATUS,
+        name="Jellyfish Status",
+        icon="mdi:jellyfish",
+    ),
+    ENTITY_LAST_TEST_DATE: SensorEntityDescription(
+        key=ENTITY_LAST_TEST_DATE,
+        name="Last Water Test",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:calendar-clock",
+    ),
+    ENTITY_DESCRIPTION: SensorEntityDescription(
+        key=ENTITY_DESCRIPTION,
+        name="Description",
+        icon="mdi:information",
+        entity_registry_enabled_default=False,
+    ),
+}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
-    entry: IntegrationBlueprintConfigEntry,
+    hass: HomeAssistant,
+    entry: CatalunyaBeachesConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the sensor platform."""
-    async_add_entities(
-        IntegrationBlueprintSensor(
-            coordinator=entry.runtime_data.coordinator,
-            entity_description=entity_description,
-        )
-        for entity_description in ENTITY_DESCRIPTIONS
-    )
+    """Set up Catalunya Beaches sensor platform."""
+    enabled_entities = entry.options.get(CONF_ENABLED_ENTITIES, [])
+    
+    sensors = []
+    for entity_type, description in SENSOR_TYPES.items():
+        if entity_type in enabled_entities:
+            sensors.append(
+                CatalunyaBeachSensor(
+                    coordinator=entry.runtime_data.coordinator,
+                    entity_description=description,
+                    beach_id=entry.data["beach_id"],
+                    beach_name=entry.data["beach_name"],
+                )
+            )
+    
+    LOGGER.debug("Setting up %d sensors for beach %s", len(sensors), entry.data["beach_name"])
+    async_add_entities(sensors)
 
 
-class IntegrationBlueprintSensor(IntegrationBlueprintEntity, SensorEntity):
-    """ha-catalunya-beaches Sensor class."""
+class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
+    """Sensor for Catalunya Beach data."""
 
     def __init__(
         self,
-        coordinator: BlueprintDataUpdateCoordinator,
+        coordinator,
         entity_description: SensorEntityDescription,
+        beach_id: int,
+        beach_name: str,
     ) -> None:
-        """Initialize the sensor class."""
-        super().__init__(coordinator)
+        """Initialize the sensor."""
+        super().__init__(coordinator, beach_id, beach_name)
         self.entity_description = entity_description
+        self._attr_unique_id = f"{beach_id}_{entity_description.key}"
 
     @property
-    def native_value(self) -> str | None:
-        """Return the native value of the sensor."""
-        return self.coordinator.data.get("body")
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        if not self.coordinator.data:
+            return None
+
+        beach_info = self.coordinator.data
+        key = self.entity_description.key
+
+        try:
+            if key == ENTITY_WATER_TEMP:
+                if beach_info.condiciones and beach_info.condiciones.temperatura_agua:
+                    return round(beach_info.condiciones.temperatura_agua, 1)
+                # Fallback to latest test result
+                if beach_info.ultimos_analisis:
+                    latest = beach_info.ultimos_analisis[0]
+                    if latest.temperatura_agua:
+                        return round(latest.temperatura_agua, 1)
+                return None
+
+            elif key == ENTITY_AIR_TEMP:
+                if beach_info.condiciones and beach_info.condiciones.temperatura:
+                    return round(beach_info.condiciones.temperatura, 1)
+                return None
+
+            elif key == ENTITY_WATER_QUALITY:
+                if beach_info.calidad_playa:
+                    estado = beach_info.calidad_playa.estado
+                    return WATER_QUALITY_STATUS.get(estado, estado)
+                return None
+
+            elif key == ENTITY_UV_INDEX:
+                if beach_info.condiciones and beach_info.condiciones.uv_maximo is not None:
+                    return beach_info.condiciones.uv_maximo
+                return None
+
+            elif key == ENTITY_WAVE_HEIGHT:
+                if beach_info.condiciones and beach_info.condiciones.altura_olas is not None:
+                    return round(beach_info.condiciones.altura_olas, 2)
+                return None
+
+            elif key == ENTITY_WIND_SPEED:
+                if beach_info.condiciones and beach_info.condiciones.velocidad_viento is not None:
+                    return round(beach_info.condiciones.velocidad_viento, 1)
+                return None
+
+            elif key == ENTITY_SKY_CONDITION:
+                if beach_info.condiciones:
+                    if beach_info.condiciones.cielo_traduccion:
+                        return beach_info.condiciones.cielo_traduccion
+                    etiqueta = beach_info.condiciones.cielo_etiqueta
+                    return SKY_CONDITIONS.get(etiqueta, etiqueta)
+                return None
+
+            elif key == ENTITY_JELLYFISH_STATUS:
+                if beach_info.medusas:
+                    return beach_info.medusas.peligrosidad or "Unknown"
+                return None
+
+            elif key == ENTITY_LAST_TEST_DATE:
+                if beach_info.ultimos_analisis:
+                    latest = beach_info.ultimos_analisis[0]
+                    if latest.fecha:
+                        return latest.fecha
+                return None
+
+            elif key == ENTITY_DESCRIPTION:
+                return beach_info.descripcion or None
+
+        except (AttributeError, IndexError, KeyError) as err:
+            LOGGER.debug("Error getting sensor value for %s: %s", key, err)
+            return None
+
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, any]:
+        """Return additional state attributes."""
+        if not self.coordinator.data:
+            return {}
+
+        beach_info = self.coordinator.data
+        key = self.entity_description.key
+        attributes = {}
+
+        try:
+            if key == ENTITY_WATER_QUALITY:
+                if beach_info.calidad_playa:
+                    attributes["estado_info"] = beach_info.calidad_playa.estado_info
+                    if beach_info.calidad_playa.a_destacar:
+                        attributes["destacar"] = beach_info.calidad_playa.a_destacar
+                    if beach_info.calidad_playa.timestamp:
+                        attributes["last_update"] = beach_info.calidad_playa.timestamp.isoformat()
+
+            elif key == ENTITY_JELLYFISH_STATUS:
+                if beach_info.medusas:
+                    attributes["danger_level"] = beach_info.medusas.peligrosidad_etiqueta
+                    if beach_info.medusas.especies:
+                        attributes["species"] = beach_info.medusas.especies
+                    if beach_info.medusas.fecha_modificacion:
+                        attributes["last_update"] = beach_info.medusas.fecha_modificacion.isoformat()
+
+            elif key == ENTITY_WATER_TEMP and beach_info.ultimos_analisis:
+                latest = beach_info.ultimos_analisis[0]
+                attributes["test_estado"] = latest.estado
+                if latest.fecha:
+                    attributes["test_date"] = latest.fecha.isoformat()
+
+            elif key == ENTITY_UV_INDEX and beach_info.condiciones:
+                if beach_info.condiciones.uv_minimo is not None:
+                    attributes["uv_min"] = beach_info.condiciones.uv_minimo
+
+            elif key == ENTITY_WIND_SPEED and beach_info.condiciones:
+                if beach_info.condiciones.direccion_viento is not None:
+                    attributes["direction"] = round(beach_info.condiciones.direccion_viento, 1)
+
+        except (AttributeError, KeyError) as err:
+            LOGGER.debug("Error getting attributes for %s: %s", key, err)
+
+        return attributes
