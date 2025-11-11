@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
+from zoneinfo import ZoneInfo
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .api import (
     CatalunyaBeachesApiClientCommunicationError,
@@ -33,13 +35,14 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     ) -> None:
         """Initialize the coordinator."""
         self.beach_id = config_entry.data[CONF_BEACH_ID]
-        
+        self.last_fetched: datetime | None = None
+
         # Get update interval from config or use default
         update_interval = config_entry.options.get(
             "update_interval",
             config_entry.data.get("update_interval", DEFAULT_UPDATE_INTERVAL),
         )
-        
+
         super().__init__(
             hass,
             LOGGER,
@@ -49,25 +52,28 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
 
     async def _async_update_data(self) -> BeachInfo:
         """Fetch beach data from API.
-        
+
         Returns:
             BeachInfo object with current beach data
-            
+
         Raises:
             UpdateFailed: When update fails
         """
         try:
             client = self.config_entry.runtime_data.client
             beach_info = await client.async_get_beach_detail(self.beach_id)
-            
+
             LOGGER.debug(
                 "Successfully updated data for beach %s (%s)",
                 beach_info.nombre,
                 self.beach_id,
             )
-            
+
+            # Update last fetched timestamp
+            self.last_fetched = dt_util.now()
+
             return beach_info
-            
+
         except CatalunyaBeachesApiClientCommunicationError as exception:
             # Communication errors should trigger retry
             LOGGER.warning(
@@ -75,8 +81,10 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
                 self.beach_id,
                 exception,
             )
-            raise UpdateFailed(f"Error communicating with API: {exception}") from exception
-            
+            raise UpdateFailed(
+                f"Error communicating with API: {exception}"
+            ) from exception
+
         except CatalunyaBeachesApiClientDataError as exception:
             # Data parsing errors might be temporary
             LOGGER.warning(
@@ -85,7 +93,7 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
                 exception,
             )
             raise UpdateFailed(f"Error parsing beach data: {exception}") from exception
-            
+
         except CatalunyaBeachesApiClientError as exception:
             # General API errors
             LOGGER.error(
@@ -94,7 +102,7 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
                 exception,
             )
             raise UpdateFailed(f"Unexpected API error: {exception}") from exception
-            
+
         except Exception as exception:  # pylint: disable=broad-except
             # Catch-all for unexpected errors
             LOGGER.exception(
@@ -109,7 +117,7 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
 
     def update_interval_seconds(self, new_interval: int) -> None:
         """Update the polling interval.
-        
+
         Args:
             new_interval: New interval in seconds
         """

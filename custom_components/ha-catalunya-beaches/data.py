@@ -294,6 +294,7 @@ class BeachInfo:
     id: int
     nombre: str
     descripcion: str
+    descripcion_toast: str
     municipio: str
     costa: str
     coordenadas: tuple[float, float] | None
@@ -370,6 +371,7 @@ class BeachInfo:
             id=playa.get("id", 0),
             nombre=playa.get("nombre", ""),
             descripcion=playa.get("descripcioPlatja", ""),
+            descripcion_toast=playa.get("descriptionToast", ""),
             municipio=playa.get("municipio", ""),
             costa=playa.get("costa", ""),
             coordenadas=coordenadas,

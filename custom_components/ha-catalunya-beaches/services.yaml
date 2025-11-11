@@ -1,0 +1,19 @@
+refresh_all:
+  name: Refresh all beaches
+  description: Force an immediate refresh of data for all configured beaches.
+  fields: {}
+
+refresh_beach:
+  name: Refresh beach
+  description: Force an immediate refresh of data for a specific beach.
+  fields:
+    beach_id:
+      name: Beach ID
+      description: The ID of the beach to refresh.
+      required: true
+      example: 153
+      selector:
+        number:
+          min: 1
+          max: 999
+          mode: box

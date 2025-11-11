@@ -103,6 +103,12 @@
             },
             "description": {
                 "name": "Descripció de la platja"
+            },
+            "beach_info": {
+                "name": "Informació de la platja"
+            },
+            "beach_name": {
+                "name": "Nom de la platja"
             }
         },
         "binary_sensor": {
@@ -120,6 +126,27 @@
             },
             "rain_risk_high": {
                 "name": "Alt risc de pluja"
+            }
+        },
+        "button": {
+            "refresh": {
+                "name": "Actualitzar"
+            }
+        }
+    },
+    "services": {
+        "refresh_all": {
+            "name": "Actualitzar totes les platges",
+            "description": "Forçar una actualització immediata de les dades de totes les platges configurades."
+        },
+        "refresh_beach": {
+            "name": "Actualitzar platja",
+            "description": "Forçar una actualització immediata de les dades d'una platja específica.",
+            "fields": {
+                "beach_id": {
+                    "name": "ID de la platja",
+                    "description": "L'ID de la platja a actualitzar."
+                }
             }
         }
     },

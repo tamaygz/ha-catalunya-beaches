@@ -85,6 +85,12 @@
       },
       "description": {
         "name": "Beach Description"
+      },
+      "beach_info": {
+        "name": "Beach Info"
+      },
+      "beach_name": {
+        "name": "Beach Name"
       }
     },
     "binary_sensor": {
@@ -102,6 +108,27 @@
       },
       "rain_risk_high": {
         "name": "Rain Risk High"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh"
+      }
+    }
+  },
+  "services": {
+    "refresh_all": {
+      "name": "Refresh all beaches",
+      "description": "Force an immediate refresh of data for all configured beaches."
+    },
+    "refresh_beach": {
+      "name": "Refresh beach",
+      "description": "Force an immediate refresh of data for a specific beach.",
+      "fields": {
+        "beach_id": {
+          "name": "Beach ID",
+          "description": "The ID of the beach to refresh."
+        }
       }
     }
   }

@@ -17,6 +17,8 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     CONF_ENABLED_ENTITIES,
     ENTITY_AIR_TEMP,
+    ENTITY_BEACH_INFO,
+    ENTITY_BEACH_NAME,
     ENTITY_DESCRIPTION,
     ENTITY_JELLYFISH_STATUS,
     ENTITY_LAST_TEST_DATE,
@@ -103,6 +105,16 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         name="Description",
         icon="mdi:information",
     ),
+    ENTITY_BEACH_INFO: SensorEntityDescription(
+        key=ENTITY_BEACH_INFO,
+        name="Beach Info",
+        icon="mdi:alert-circle-outline",
+    ),
+    ENTITY_BEACH_NAME: SensorEntityDescription(
+        key=ENTITY_BEACH_NAME,
+        name="Beach Name",
+        icon="mdi:beach",
+    ),
 }
 
 
@@ -115,7 +127,21 @@ async def async_setup_entry(
     enabled_entities = entry.options.get(CONF_ENABLED_ENTITIES, [])
 
     sensors = []
+
+    # Always add beach name sensor (not configurable)
+    sensors.append(
+        CatalunyaBeachSensor(
+            coordinator=entry.runtime_data.coordinator,
+            entity_description=SENSOR_TYPES[ENTITY_BEACH_NAME],
+            beach_id=entry.data["beach_id"],
+            beach_name=entry.data["beach_name"],
+        )
+    )
+
+    # Add configurable sensors
     for entity_type, description in SENSOR_TYPES.items():
+        if entity_type == ENTITY_BEACH_NAME:
+            continue  # Already added above
         if entity_type in enabled_entities:
             sensors.append(
                 CatalunyaBeachSensor(
@@ -233,6 +259,16 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                     return desc
                 return None
 
+            elif key == ENTITY_BEACH_INFO:
+                # Beach info from descriptionToast
+                if beach_info.descripcion_toast:
+                    return beach_info.descripcion_toast.strip()
+                return None
+
+            elif key == ENTITY_BEACH_NAME:
+                # Beach name - always available
+                return beach_info.nombre or None
+
         except (AttributeError, IndexError, KeyError) as err:
             LOGGER.debug("Error getting sensor value for %s: %s", key, err)
             return None
@@ -292,6 +328,12 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                 # Store full description in attributes since state is truncated
                 attributes["full_description"] = beach_info.descripcion.strip()
                 attributes["length"] = len(beach_info.descripcion)
+
+            elif key == ENTITY_BEACH_NAME:
+                # Add beach ID as attribute
+                attributes["beach_id"] = beach_info.id
+                attributes["municipality"] = beach_info.municipio
+                attributes["coast"] = beach_info.costa
 
         except (AttributeError, KeyError) as err:
             LOGGER.debug("Error getting attributes for %s: %s", key, err)

@@ -26,6 +26,7 @@ from .const import (
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
     ENTITY_AIR_TEMP,
+    ENTITY_BEACH_INFO,
     ENTITY_DESCRIPTION,
     ENTITY_JELLYFISH_ALERT,
     ENTITY_JELLYFISH_STATUS,
@@ -216,6 +217,10 @@ class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                     "label": "Beach Description",
                                 },
                                 {
+                                    "value": ENTITY_BEACH_INFO,
+                                    "label": "Beach Info",
+                                },
+                                {
                                     "value": ENTITY_LIFEGUARD,
                                     "label": "Lifeguard Present",
                                 },
@@ -350,6 +355,10 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
                                 {
                                     "value": ENTITY_DESCRIPTION,
                                     "label": "Beach Description",
+                                },
+                                {
+                                    "value": ENTITY_BEACH_INFO,
+                                    "label": "Beach Info",
                                 },
                                 {
                                     "value": ENTITY_LIFEGUARD,
