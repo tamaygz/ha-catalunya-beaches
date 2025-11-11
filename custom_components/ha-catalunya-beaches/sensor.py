@@ -376,3 +376,20 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
             LOGGER.debug("Error getting attributes for %s: %s", key, err)
 
         return attributes
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture for the beach name sensor."""
+        # Only add picture to beach_name sensor
+        if self.entity_description.key != ENTITY_BEACH_NAME:
+            return None
+
+        if not self.coordinator.data:
+            return None
+
+        beach_info = self.coordinator.data
+        if beach_info.imagenes and len(beach_info.imagenes) > 0:
+            # Return the first (primary) image URL
+            return f"https://aca-web.gencat.cat/images/platges/{beach_info.imagenes[0]}"
+
+        return None
