@@ -1,89 +1,336 @@
-"""Adds config flow for Blueprint."""
+"""Config flow for Catalunya Beaches."""
 
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from slugify import slugify
 
 from .api import (
-    IntegrationBlueprintApiClient,
-    IntegrationBlueprintApiClientAuthenticationError,
-    IntegrationBlueprintApiClientCommunicationError,
-    IntegrationBlueprintApiClientError,
+    CatalunyaBeachesApiClient,
+    CatalunyaBeachesApiClientCommunicationError,
+    CatalunyaBeachesApiClientError,
 )
-from .const import DOMAIN, LOGGER
+from .const import (
+    CONF_BEACH_ID,
+    CONF_BEACH_NAME,
+    CONF_ENABLED_ENTITIES,
+    CONF_LANGUAGE,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_ENABLED_ENTITIES,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    ENTITY_AIR_TEMP,
+    ENTITY_DESCRIPTION,
+    ENTITY_JELLYFISH_ALERT,
+    ENTITY_JELLYFISH_STATUS,
+    ENTITY_LAST_TEST_DATE,
+    ENTITY_LIFEGUARD,
+    ENTITY_OUT_OF_SEASON,
+    ENTITY_RAIN_RISK,
+    ENTITY_SKY_CONDITION,
+    ENTITY_UV_INDEX,
+    ENTITY_WATER_QUALITY,
+    ENTITY_WATER_QUALITY_GOOD,
+    ENTITY_WATER_TEMP,
+    ENTITY_WAVE_HEIGHT,
+    ENTITY_WIND_SPEED,
+    LOGGER,
+    MAX_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL,
+)
+from .data import BeachListItem
 
 
-class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for Blueprint."""
+class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Catalunya Beaches."""
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._beaches: list[BeachListItem] = []
+        self._selected_beach: BeachListItem | None = None
+        self._language: str = "en"
+
     async def async_step_user(
         self,
-        user_input: dict | None = None,
-    ) -> config_entries.ConfigFlowResult:
-        """Handle a flow initialized by the user."""
-        _errors = {}
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Handle the initial step - language selection."""
+        errors = {}
+
         if user_input is not None:
-            try:
-                await self._test_credentials(
-                    username=user_input[CONF_USERNAME],
-                    password=user_input[CONF_PASSWORD],
-                )
-            except IntegrationBlueprintApiClientAuthenticationError as exception:
-                LOGGER.warning(exception)
-                _errors["base"] = "auth"
-            except IntegrationBlueprintApiClientCommunicationError as exception:
-                LOGGER.error(exception)
-                _errors["base"] = "connection"
-            except IntegrationBlueprintApiClientError as exception:
-                LOGGER.exception(exception)
-                _errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(
-                    ## Do NOT use this in production code
-                    ## The unique_id should never be something that can change
-                    ## https://developers.home-assistant.io/docs/config_entries_config_flow_handler#unique-ids
-                    unique_id=slugify(user_input[CONF_USERNAME])
-                )
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME],
-                    data=user_input,
-                )
+            self._language = user_input[CONF_LANGUAGE]
+            return await self.async_step_select_beach()
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_USERNAME,
-                        default=(user_input or {}).get(CONF_USERNAME, vol.UNDEFINED),
-                    ): selector.TextSelector(
-                        selector.TextSelectorConfig(
-                            type=selector.TextSelectorType.TEXT,
-                        ),
+                    vol.Required(CONF_LANGUAGE, default="en"): vol.In(
+                        {
+                            "en": "English",
+                            "ca": "Català",
+                        }
                     ),
-                    vol.Required(CONF_PASSWORD): selector.TextSelector(
-                        selector.TextSelectorConfig(
-                            type=selector.TextSelectorType.PASSWORD,
-                        ),
-                    ),
-                },
+                }
             ),
-            errors=_errors,
+            errors=errors,
         )
 
-    async def _test_credentials(self, username: str, password: str) -> None:
-        """Validate credentials."""
-        client = IntegrationBlueprintApiClient(
-            username=username,
-            password=password,
-            session=async_create_clientsession(self.hass),
+    async def async_step_select_beach(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Handle beach selection step."""
+        errors = {}
+
+        if not self._beaches:
+            # Fetch beach list
+            try:
+                client = CatalunyaBeachesApiClient(
+                    session=async_create_clientsession(self.hass),
+                    language=self._language,
+                )
+                self._beaches = await client.async_get_beach_list()
+            except CatalunyaBeachesApiClientCommunicationError as exception:
+                LOGGER.error("Communication error fetching beach list: %s", exception)
+                errors["base"] = "connection"
+            except CatalunyaBeachesApiClientError as exception:
+                LOGGER.exception("Error fetching beach list: %s", exception)
+                errors["base"] = "unknown"
+
+            if errors:
+                return self.async_show_form(
+                    step_id="select_beach",
+                    data_schema=vol.Schema({}),
+                    errors=errors,
+                )
+
+        if user_input is not None:
+            beach_id = user_input[CONF_BEACH_ID]
+            self._selected_beach = next(
+                (beach for beach in self._beaches if beach.id == beach_id),
+                None,
+            )
+
+            if self._selected_beach:
+                # Check if already configured
+                await self.async_set_unique_id(f"{DOMAIN}_{beach_id}")
+                self._abort_if_unique_id_configured()
+
+                return await self.async_step_configure_entities()
+
+            errors["base"] = "beach_not_found"
+
+        # Create beach selection options
+        beach_options = {
+            beach.id: f"{beach.nombre} ({beach.municipio}, {beach.costa})"
+            for beach in sorted(self._beaches, key=lambda x: x.nombre)
+        }
+
+        return self.async_show_form(
+            step_id="select_beach",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_BEACH_ID): vol.In(beach_options),
+                }
+            ),
+            errors=errors,
         )
-        await client.async_get_data()
+
+    async def async_step_configure_entities(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Configure which entities to enable."""
+        if user_input is not None:
+            # Create config entry
+            return self.async_create_entry(
+                title=self._selected_beach.nombre,
+                data={
+                    CONF_BEACH_ID: self._selected_beach.id,
+                    CONF_BEACH_NAME: self._selected_beach.nombre,
+                    CONF_LANGUAGE: self._language,
+                    CONF_UPDATE_INTERVAL: user_input.get(
+                        CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                    ),
+                },
+                options={
+                    CONF_ENABLED_ENTITIES: user_input.get(
+                        CONF_ENABLED_ENTITIES, DEFAULT_ENABLED_ENTITIES
+                    ),
+                },
+            )
+
+        # Entity selection schema
+        return self.async_show_form(
+            step_id="configure_entities",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_UPDATE_INTERVAL,
+                        default=DEFAULT_UPDATE_INTERVAL,
+                    ): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
+                    ),
+                    vol.Optional(
+                        CONF_ENABLED_ENTITIES,
+                        default=DEFAULT_ENABLED_ENTITIES,
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                {"value": ENTITY_WATER_TEMP, "label": "Water Temperature"},
+                                {"value": ENTITY_AIR_TEMP, "label": "Air Temperature"},
+                                {"value": ENTITY_WATER_QUALITY, "label": "Water Quality Status"},
+                                {"value": ENTITY_UV_INDEX, "label": "UV Index"},
+                                {"value": ENTITY_WAVE_HEIGHT, "label": "Wave Height"},
+                                {"value": ENTITY_WIND_SPEED, "label": "Wind Speed"},
+                                {"value": ENTITY_SKY_CONDITION, "label": "Sky Condition"},
+                                {"value": ENTITY_JELLYFISH_STATUS, "label": "Jellyfish Status"},
+                                {"value": ENTITY_LAST_TEST_DATE, "label": "Last Water Test Date"},
+                                {"value": ENTITY_DESCRIPTION, "label": "Beach Description"},
+                                {"value": ENTITY_LIFEGUARD, "label": "Lifeguard Present"},
+                                {"value": ENTITY_OUT_OF_SEASON, "label": "Out of Season"},
+                                {"value": ENTITY_WATER_QUALITY_GOOD, "label": "Water Quality Good"},
+                                {"value": ENTITY_JELLYFISH_ALERT, "label": "Jellyfish Alert"},
+                                {"value": ENTITY_RAIN_RISK, "label": "High Rain Risk"},
+                            ],
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.LIST,
+                        ),
+                    ),
+                }
+            ),
+            description_placeholders={
+                "beach_name": self._selected_beach.nombre,
+            },
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> CatalunyaBeachesOptionsFlow:
+        """Get the options flow for this handler."""
+        return CatalunyaBeachesOptionsFlow(config_entry)
+
+
+class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
+    """Handle options flow for Catalunya Beaches."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Manage the options."""
+        return await self.async_step_configure()
+
+    async def async_step_configure(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Configure beach options."""
+        if user_input is not None:
+            if user_input.get("force_refresh"):
+                # Trigger force refresh
+                coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id].coordinator
+                await coordinator.async_force_refresh()
+                return self.async_create_entry(title="", data=self.config_entry.options)
+
+            if user_input.get("delete_history"):
+                return await self.async_step_confirm_delete()
+
+            # Update options
+            return self.async_create_entry(title="", data=user_input)
+
+        current_interval = self.config_entry.options.get(
+            CONF_UPDATE_INTERVAL,
+            self.config_entry.data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
+        )
+        current_entities = self.config_entry.options.get(
+            CONF_ENABLED_ENTITIES,
+            DEFAULT_ENABLED_ENTITIES,
+        )
+
+        return self.async_show_form(
+            step_id="configure",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_UPDATE_INTERVAL,
+                        default=current_interval,
+                    ): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
+                    ),
+                    vol.Optional(
+                        CONF_ENABLED_ENTITIES,
+                        default=current_entities,
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                {"value": ENTITY_WATER_TEMP, "label": "Water Temperature"},
+                                {"value": ENTITY_AIR_TEMP, "label": "Air Temperature"},
+                                {"value": ENTITY_WATER_QUALITY, "label": "Water Quality Status"},
+                                {"value": ENTITY_UV_INDEX, "label": "UV Index"},
+                                {"value": ENTITY_WAVE_HEIGHT, "label": "Wave Height"},
+                                {"value": ENTITY_WIND_SPEED, "label": "Wind Speed"},
+                                {"value": ENTITY_SKY_CONDITION, "label": "Sky Condition"},
+                                {"value": ENTITY_JELLYFISH_STATUS, "label": "Jellyfish Status"},
+                                {"value": ENTITY_LAST_TEST_DATE, "label": "Last Water Test Date"},
+                                {"value": ENTITY_DESCRIPTION, "label": "Beach Description"},
+                                {"value": ENTITY_LIFEGUARD, "label": "Lifeguard Present"},
+                                {"value": ENTITY_OUT_OF_SEASON, "label": "Out of Season"},
+                                {"value": ENTITY_WATER_QUALITY_GOOD, "label": "Water Quality Good"},
+                                {"value": ENTITY_JELLYFISH_ALERT, "label": "Jellyfish Alert"},
+                                {"value": ENTITY_RAIN_RISK, "label": "High Rain Risk"},
+                            ],
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.LIST,
+                        ),
+                    ),
+                    vol.Optional("force_refresh", default=False): bool,
+                    vol.Optional("delete_history", default=False): bool,
+                }
+            ),
+        )
+
+    async def async_step_confirm_delete(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Confirm deletion of historical data."""
+        if user_input is not None:
+            if user_input.get("confirm"):
+                # Delete historical data
+                # This would require calling recorder service to purge entity data
+                # For now, we'll just acknowledge
+                LOGGER.info("Historical data deletion requested for beach %s", 
+                           self.config_entry.data[CONF_BEACH_NAME])
+                # TODO: Implement actual history deletion via recorder service
+            
+            return self.async_create_entry(title="", data=self.config_entry.options)
+
+        return self.async_show_form(
+            step_id="confirm_delete",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("confirm", default=False): bool,
+                }
+            ),
+            description_placeholders={
+                "beach_name": self.config_entry.data[CONF_BEACH_NAME],
+            },
+        )

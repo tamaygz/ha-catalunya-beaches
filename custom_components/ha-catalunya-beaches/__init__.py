@@ -7,56 +7,61 @@ https://github.com/tamaygz/ha-catalunya-beaches
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
-from .api import IntegrationBlueprintApiClient
-from .const import DOMAIN, LOGGER
-from .coordinator import BlueprintDataUpdateCoordinator
-from .data import IntegrationBlueprintData
+from .api import CatalunyaBeachesApiClient
+from .const import CONF_LANGUAGE, DOMAIN, LOGGER
+from .coordinator import BeachDataUpdateCoordinator
+from .data import CatalunyaBeachesData
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-    from .data import IntegrationBlueprintConfigEntry
+    from .data import CatalunyaBeachesConfigEntry
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
-    Platform.SWITCH,
 ]
 
 
-# https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: IntegrationBlueprintConfigEntry,
+    entry: CatalunyaBeachesConfigEntry,
 ) -> bool:
-    """Set up this integration using UI."""
-    coordinator = BlueprintDataUpdateCoordinator(
-        hass=hass,
-        logger=LOGGER,
-        name=DOMAIN,
-        update_interval=timedelta(hours=1),
+    """Set up Catalunya Beaches from a config entry."""
+    language = entry.data.get(CONF_LANGUAGE, "en")
+    
+    # Create API client
+    client = CatalunyaBeachesApiClient(
+        session=async_get_clientsession(hass),
+        language=language,
     )
-    entry.runtime_data = IntegrationBlueprintData(
-        client=IntegrationBlueprintApiClient(
-            username=entry.data[CONF_USERNAME],
-            password=entry.data[CONF_PASSWORD],
-            session=async_get_clientsession(hass),
-        ),
-        integration=async_get_loaded_integration(hass, entry.domain),
+    
+    # Create data update coordinator
+    coordinator = BeachDataUpdateCoordinator(
+        hass=hass,
+        config_entry=entry,
+    )
+    
+    # Store runtime data
+    entry.runtime_data = CatalunyaBeachesData(
+        client=client,
         coordinator=coordinator,
+        integration=async_get_loaded_integration(hass, entry.domain),
     )
 
-    # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
+    # Perform first refresh
     await coordinator.async_config_entry_first_refresh()
 
+    # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    
+    # Register update listener for options changes
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
@@ -64,15 +69,27 @@ async def async_setup_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant,
-    entry: IntegrationBlueprintConfigEntry,
+    entry: CatalunyaBeachesConfigEntry,
 ) -> bool:
-    """Handle removal of an entry."""
+    """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_reload_entry(
     hass: HomeAssistant,
-    entry: IntegrationBlueprintConfigEntry,
+    entry: CatalunyaBeachesConfigEntry,
 ) -> None:
-    """Reload config entry."""
+    """Reload config entry when options change."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(
+    hass: HomeAssistant,
+    entry: CatalunyaBeachesConfigEntry,
+) -> None:
+    """Handle removal of an entry.
+    
+    This is called when the entry is being removed. We don't need to do anything
+    special here as Home Assistant will automatically clean up entities.
+    """
+    LOGGER.debug("Removing beach entry: %s", entry.title)
