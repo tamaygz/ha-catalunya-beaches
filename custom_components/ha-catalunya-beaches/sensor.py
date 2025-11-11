@@ -102,7 +102,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=ENTITY_DESCRIPTION,
         name="Description",
         icon="mdi:information",
-        entity_registry_enabled_default=False,
     ),
 }
 
@@ -114,7 +113,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Catalunya Beaches sensor platform."""
     enabled_entities = entry.options.get(CONF_ENABLED_ENTITIES, [])
-    
+
     sensors = []
     for entity_type, description in SENSOR_TYPES.items():
         if entity_type in enabled_entities:
@@ -126,8 +125,10 @@ async def async_setup_entry(
                     beach_name=entry.data["beach_name"],
                 )
             )
-    
-    LOGGER.debug("Setting up %d sensors for beach %s", len(sensors), entry.data["beach_name"])
+
+    LOGGER.debug(
+        "Setting up %d sensors for beach %s", len(sensors), entry.data["beach_name"]
+    )
     async_add_entities(sensors)
 
 
@@ -178,17 +179,26 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                 return None
 
             elif key == ENTITY_UV_INDEX:
-                if beach_info.condiciones and beach_info.condiciones.uv_maximo is not None:
+                if (
+                    beach_info.condiciones
+                    and beach_info.condiciones.uv_maximo is not None
+                ):
                     return beach_info.condiciones.uv_maximo
                 return None
 
             elif key == ENTITY_WAVE_HEIGHT:
-                if beach_info.condiciones and beach_info.condiciones.altura_olas is not None:
+                if (
+                    beach_info.condiciones
+                    and beach_info.condiciones.altura_olas is not None
+                ):
                     return round(beach_info.condiciones.altura_olas, 2)
                 return None
 
             elif key == ENTITY_WIND_SPEED:
-                if beach_info.condiciones and beach_info.condiciones.velocidad_viento is not None:
+                if (
+                    beach_info.condiciones
+                    and beach_info.condiciones.velocidad_viento is not None
+                ):
                     return round(beach_info.condiciones.velocidad_viento, 1)
                 return None
 
@@ -213,7 +223,15 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                 return None
 
             elif key == ENTITY_DESCRIPTION:
-                return beach_info.descripcion or None
+                # Description can be very long, so truncate state to 255 chars
+                # and put full text in attributes
+                if beach_info.descripcion:
+                    desc = beach_info.descripcion.strip()
+                    # Return truncated version for state (max 255 chars)
+                    if len(desc) > 252:  # Leave room for "..."
+                        return desc[:252] + "..."
+                    return desc
+                return None
 
         except (AttributeError, IndexError, KeyError) as err:
             LOGGER.debug("Error getting sensor value for %s: %s", key, err)
@@ -238,15 +256,21 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                     if beach_info.calidad_playa.a_destacar:
                         attributes["destacar"] = beach_info.calidad_playa.a_destacar
                     if beach_info.calidad_playa.timestamp:
-                        attributes["last_update"] = beach_info.calidad_playa.timestamp.isoformat()
+                        attributes["last_update"] = (
+                            beach_info.calidad_playa.timestamp.isoformat()
+                        )
 
             elif key == ENTITY_JELLYFISH_STATUS:
                 if beach_info.medusas:
-                    attributes["danger_level"] = beach_info.medusas.peligrosidad_etiqueta
+                    attributes["danger_level"] = (
+                        beach_info.medusas.peligrosidad_etiqueta
+                    )
                     if beach_info.medusas.especies:
                         attributes["species"] = beach_info.medusas.especies
                     if beach_info.medusas.fecha_modificacion:
-                        attributes["last_update"] = beach_info.medusas.fecha_modificacion.isoformat()
+                        attributes["last_update"] = (
+                            beach_info.medusas.fecha_modificacion.isoformat()
+                        )
 
             elif key == ENTITY_WATER_TEMP and beach_info.ultimos_analisis:
                 latest = beach_info.ultimos_analisis[0]
@@ -260,7 +284,14 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
 
             elif key == ENTITY_WIND_SPEED and beach_info.condiciones:
                 if beach_info.condiciones.direccion_viento is not None:
-                    attributes["direction"] = round(beach_info.condiciones.direccion_viento, 1)
+                    attributes["direction"] = round(
+                        beach_info.condiciones.direccion_viento, 1
+                    )
+
+            elif key == ENTITY_DESCRIPTION and beach_info.descripcion:
+                # Store full description in attributes since state is truncated
+                attributes["full_description"] = beach_info.descripcion.strip()
+                attributes["length"] = len(beach_info.descripcion)
 
         except (AttributeError, KeyError) as err:
             LOGGER.debug("Error getting attributes for %s: %s", key, err)

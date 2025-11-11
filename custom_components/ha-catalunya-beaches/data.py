@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
+from zoneinfo import ZoneInfo
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -55,7 +56,9 @@ class BeachListItem:
             descripcion=data.get("descripcion", ""),
             imagen_url=data.get("imagen_url", ""),
             tipoarena=data.get("tipoarena", ""),
-            temperaturaagua=float(data["temperaturaagua"]) if data.get("temperaturaagua") else None,
+            temperaturaagua=float(data["temperaturaagua"])
+            if data.get("temperaturaagua")
+            else None,
             estadocielo=data.get("estadocielo", ""),
             comarca=data.get("comarca", ""),
             costa=data.get("costa", ""),
@@ -86,8 +89,13 @@ class WaterQuality:
         if ts_data := data.get("timestamp_calidad"):
             if isinstance(ts_data, dict) and "date" in ts_data:
                 try:
-                    timestamp = datetime.fromisoformat(ts_data["date"].replace(".000000", ""))
-                except (ValueError, AttributeError):
+                    dt_str = ts_data["date"].replace(".000000", "")
+                    timestamp = datetime.fromisoformat(dt_str)
+                    # Ensure timezone is set (use Europe/Madrid if not present)
+                    if timestamp.tzinfo is None:
+                        tz = ZoneInfo(ts_data.get("timezone", "Europe/Madrid"))
+                        timestamp = timestamp.replace(tzinfo=tz)
+                except (ValueError, AttributeError, KeyError):
                     pass
 
         return cls(
@@ -116,8 +124,13 @@ class JellyfishStatus:
         if fecha_data := data.get("fechaModificacion"):
             if isinstance(fecha_data, dict) and "date" in fecha_data:
                 try:
-                    fecha_modificacion = datetime.fromisoformat(fecha_data["date"].replace(".000000", ""))
-                except (ValueError, AttributeError):
+                    dt_str = fecha_data["date"].replace(".000000", "")
+                    fecha_modificacion = datetime.fromisoformat(dt_str)
+                    # Ensure timezone is set (use Europe/Madrid if not present)
+                    if fecha_modificacion.tzinfo is None:
+                        tz = ZoneInfo(fecha_data.get("timezone", "Europe/Madrid"))
+                        fecha_modificacion = fecha_modificacion.replace(tzinfo=tz)
+                except (ValueError, AttributeError, KeyError):
                     pass
 
         return cls(
@@ -146,18 +159,34 @@ class WeatherConditions:
     hora: str
 
     @classmethod
-    def from_dict(cls, estado_playa: dict[str, Any], estado_mar: dict[str, Any]) -> WeatherConditions:
+    def from_dict(
+        cls, estado_playa: dict[str, Any], estado_mar: dict[str, Any]
+    ) -> WeatherConditions:
         """Create WeatherConditions from API response dicts."""
         return cls(
-            temperatura=float(estado_playa["temperatura"]) if estado_playa.get("temperatura") else None,
-            temperatura_agua=float(estado_playa["temperaturaAgua"]) if estado_playa.get("temperaturaAgua") else None,
+            temperatura=float(estado_playa["temperatura"])
+            if estado_playa.get("temperatura")
+            else None,
+            temperatura_agua=float(estado_playa["temperaturaAgua"])
+            if estado_playa.get("temperaturaAgua")
+            else None,
             cielo_etiqueta=estado_playa.get("etiquetaCielo", ""),
             cielo_traduccion=estado_playa.get("traduccionCielo", ""),
-            altura_olas=float(estado_mar["alturaolas"]) if estado_mar.get("alturaolas") else None,
-            velocidad_viento=float(estado_mar["velocidadviento"]) if estado_mar.get("velocidadviento") else None,
-            direccion_viento=float(estado_mar["direccionviento"]) if estado_mar.get("direccionviento") else None,
-            uv_minimo=int(estado_mar["uvminimo"]) if estado_mar.get("uvminimo") else None,
-            uv_maximo=int(estado_mar["uvmaximo"]) if estado_mar.get("uvmaximo") else None,
+            altura_olas=float(estado_mar["alturaolas"])
+            if estado_mar.get("alturaolas")
+            else None,
+            velocidad_viento=float(estado_mar["velocidadviento"])
+            if estado_mar.get("velocidadviento")
+            else None,
+            direccion_viento=float(estado_mar["direccionviento"])
+            if estado_mar.get("direccionviento")
+            else None,
+            uv_minimo=int(estado_mar["uvminimo"])
+            if estado_mar.get("uvminimo")
+            else None,
+            uv_maximo=int(estado_mar["uvmaximo"])
+            if estado_mar.get("uvmaximo")
+            else None,
             fecha=estado_playa.get("fecha", ""),
             hora=estado_playa.get("hora", ""),
         )
@@ -206,10 +235,18 @@ class EnvironmentalCharacteristics:
         return cls(
             riesgo_lluvia=data.get("riesgoalteracioncalidadporlluvias", ""),
             riesgo_fitoplancton=data.get("riesgoproliferacionfitoplacton", ""),
-            temp_media_junio=float(data["temperaturamediaaguajunio"]) if data.get("temperaturamediaaguajunio") else None,
-            temp_media_julio=float(data["temperaturamediaaguajulio"]) if data.get("temperaturamediaaguajulio") else None,
-            temp_media_agosto=float(data["temperaturamediaaguaagosto"]) if data.get("temperaturamediaaguaagosto") else None,
-            temp_media_septiembre=float(data["temperaturamediaaguaseptiembre"]) if data.get("temperaturamediaaguaseptiembre") else None,
+            temp_media_junio=float(data["temperaturamediaaguajunio"])
+            if data.get("temperaturamediaaguajunio")
+            else None,
+            temp_media_julio=float(data["temperaturamediaaguajulio"])
+            if data.get("temperaturamediaaguajulio")
+            else None,
+            temp_media_agosto=float(data["temperaturamediaaguaagosto"])
+            if data.get("temperaturamediaaguaagosto")
+            else None,
+            temp_media_septiembre=float(data["temperaturamediaaguaseptiembre"])
+            if data.get("temperaturamediaaguaseptiembre")
+            else None,
         )
 
 
@@ -230,13 +267,20 @@ class WaterTestResult:
         if fecha_data := data.get("fechadato"):
             if isinstance(fecha_data, dict) and "date" in fecha_data:
                 try:
-                    fecha = datetime.fromisoformat(fecha_data["date"].replace(".000000", ""))
-                except (ValueError, AttributeError):
+                    dt_str = fecha_data["date"].replace(".000000", "")
+                    fecha = datetime.fromisoformat(dt_str)
+                    # Ensure timezone is set (use Europe/Madrid if not present)
+                    if fecha.tzinfo is None:
+                        tz = ZoneInfo(fecha_data.get("timezone", "Europe/Madrid"))
+                        fecha = fecha.replace(tzinfo=tz)
+                except (ValueError, AttributeError, KeyError):
                     pass
 
         return cls(
             fecha=fecha,
-            temperatura_agua=float(data["temperaturaagua"]) if data.get("temperaturaagua") else None,
+            temperatura_agua=float(data["temperaturaagua"])
+            if data.get("temperaturaagua")
+            else None,
             estado=data.get("codigoestado", ""),
             ef=int(data["ef"]) if data.get("ef") else None,
             ec=int(data["ec"]) if data.get("ec") else None,
@@ -268,7 +312,7 @@ class BeachInfo:
         """Create BeachInfo from API response dict."""
         items = data.get("items", {})
         playa = items.get("playa", {})
-        
+
         # Check if beach exists
         if playa.get("existe") == "N":
             msg = "Beach does not exist"
@@ -313,7 +357,9 @@ class BeachInfo:
 
         caracteristicas_ambientales = None
         if ambientales := playa.get("caracteristicasAmbientales"):
-            caracteristicas_ambientales = EnvironmentalCharacteristics.from_dict(ambientales)
+            caracteristicas_ambientales = EnvironmentalCharacteristics.from_dict(
+                ambientales
+            )
 
         # Parse water test results
         ultimos_analisis = []
