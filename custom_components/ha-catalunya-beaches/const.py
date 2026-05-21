@@ -84,28 +84,28 @@ SKY_CONDITIONS = {
 }
 
 WATER_QUALITY_STATUS = {
-    "_FORA_DE_TEMPORADA_": "out_of_season",
-    "Out of season": "out_of_season",
-    "Excellent": "excellent",
-    "Good": "good",
-    "Sufficient": "acceptable",
-    "Acceptable": "acceptable",
-    "Poor": "poor",
-    "Very Poor": "very_poor",
-    "Temporary disturbance (Rain)": "acceptable",
-    "Temporary disturbance": "acceptable",
-    "Persistence of temporary disturbance": "poor",
+    "_FORA_DE_TEMPORADA_": "Out of season",
+    "Out of season": "Out of season",
+    "Excellent": "Excellent",
+    "Good": "Good",
+    "Sufficient": "Acceptable",
+    "Acceptable": "Acceptable",
+    "Poor": "Poor",
+    "Very Poor": "Very Poor",
+    "Temporary disturbance (Rain)": "Acceptable",
+    "Temporary disturbance": "Acceptable",
+    "Persistence of temporary disturbance": "Poor",
 }
 
 JELLYFISH_STATUS = {
-    "_FORA_DE_TEMPORADA_": "out_of_season",
-    "Out of season": "out_of_season",
-    "None": "none",
-    "Low": "low",
-    "Moderate": "moderate",
-    "High": "high",
-    "Very High": "very_high",
-    "Unknown": "unknown",
+    "_FORA_DE_TEMPORADA_": "Out of season",
+    "Out of season": "Out of season",
+    "None": "None",
+    "Low": "Low",
+    "Moderate": "Moderate",
+    "High": "High",
+    "Very High": "Very High",
+    "Unknown": "Unknown",
 }
 
 LIFEGUARD_STATUS = {

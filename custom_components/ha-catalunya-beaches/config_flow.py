@@ -117,7 +117,7 @@ class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
 
-        if user_input is not None:
+        if user_input and CONF_BEACH_ID in user_input:
             beach_id = user_input[CONF_BEACH_ID]
             self._selected_beach = next(
                 (beach for beach in self._beaches if beach.id == beach_id),
