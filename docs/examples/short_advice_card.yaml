@@ -1,0 +1,87 @@
+# Example: Short Advice Card (Bubble Card + card-mod)
+# Compact status banner with color-coded icon background based on water quality.
+#
+# Requirements:
+#   - Bubble Card:  https://github.com/Clooos/Bubble-Card
+#   - card-mod:     https://github.com/thomasloven/lovelace-card-mod
+#   - Home Assistant Vertical Stack (built-in)
+#
+# Replace YOUR_BEACH_SLUG and "Your Beach Name" throughout.
+#
+# Color scheme:
+#   Excellent / Good   → green  (#2e7d32)
+#   Acceptable         → amber  (#CC6600)
+#   Poor / Very Poor   → red    (#c62828)
+#   Out of season      → grey   (#555555)
+#   unavailable/unknown→ dark   (#333333)
+
+type: custom:mod-card
+card_mod:
+  style:
+    vertical-stack$: |
+      #root {
+        background: var(--ha-card-background, var(--card-background-color, #1a1a1a));
+        border-radius: 20px;
+        overflow: hidden;
+      }
+card:
+  type: vertical-stack
+  cards:
+    - type: custom:bubble-card
+      card_type: button
+      entity: sensor.YOUR_BEACH_SLUG_water_quality   # Replace
+      name: Your Beach Name                          # Replace
+      icon: mdi:beach
+      show_state: true
+      scrolling_effect: false
+      card_mod:
+        style: |
+          .bubble-button-card-container {
+            background: transparent !important;
+          }
+          .bubble-name { font-weight: 600; }
+          .bubble-state { opacity: 0.9; }
+          .bubble-button-background {
+            background-color: transparent !important;
+            opacity: 0 !important;
+          }
+          .bubble-icon-container {
+            {% set q = states('sensor.YOUR_BEACH_SLUG_water_quality') | lower %}
+            {% if 'excellent' in q or 'good' in q %}
+              {% set rgb = '46,125,50' %}
+            {% elif 'acceptable' in q %}
+              {% set rgb = '204,102,0' %}
+            {% elif 'poor' in q %}
+              {% set rgb = '198,40,40' %}
+            {% elif 'season' in q %}
+              {% set rgb = '85,85,85' %}
+            {% else %}
+              {% set rgb = '51,51,51' %}
+            {% endif %}
+            background: rgba({{ rgb }}, 0.25) !important;
+          }
+          .bubble-icon { color: rgb(255,255,255) !important; }
+
+    - type: entities
+      entities:
+        - entity: sensor.YOUR_BEACH_SLUG_jellyfish_status
+          name: Jellyfish
+        - entity: binary_sensor.YOUR_BEACH_SLUG_lifeguard_present
+          name: Lifeguard
+        - entity: binary_sensor.YOUR_BEACH_SLUG_rain_risk_high
+          name: Rain Risk
+        - type: attribute
+          entity: sensor.YOUR_BEACH_SLUG_water_quality
+          attribute: estado_info
+          name: Quality Info
+          icon: mdi:information-outline
+      card_mod:
+        style: |
+          ha-card {
+            border-radius: 0px !important;
+            border-top: 1px solid var(--divider-color);
+          }
+          .card-content {
+            padding-top: 0px !important;
+            padding-bottom: 4px !important;
+          }

@@ -27,6 +27,8 @@ Source: https://github.com/Clooos/Bubble-Card (README).
   - `entity_picture` is set to the primary beach image
   - image/icon URLs are exposed as token-free `/local/ha-catalunya-beaches/<beach_id>/<filename>`
 
+- **Water Quality** and **Jellyfish Status** sensors also expose `latitude` / `longitude` attributes, making them directly usable in the HA Map card with `label_mode: state` to display quality level at each beach pin.
+
 ### Binary sensors
 - **Lifeguard Present**
 - **Out of Season**

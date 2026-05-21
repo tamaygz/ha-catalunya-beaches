@@ -1,0 +1,48 @@
+# Example: Flat Summary Card (no custom card dependencies)
+# Compact list of key beach metrics using only the built-in Entities card.
+#
+# Requirements:
+#   - Home Assistant Entities Card (built-in)
+#   - No extra HACS cards needed
+#
+# Replace YOUR_BEACH_SLUG with the entity slug for your beach.
+
+type: entities
+title: Your Beach Name  # Replace
+entities:
+  - entity: sensor.YOUR_BEACH_SLUG_water_quality
+    name: Water Quality
+    icon: mdi:water-check
+  - entity: sensor.YOUR_BEACH_SLUG_jellyfish_status
+    name: Jellyfish
+    icon: mdi:jellyfish
+  - entity: sensor.YOUR_BEACH_SLUG_water_temperature
+    name: Water Temp
+  - entity: sensor.YOUR_BEACH_SLUG_air_temperature
+    name: Air Temp
+  - entity: sensor.YOUR_BEACH_SLUG_uv_index
+    name: UV Index
+  - entity: sensor.YOUR_BEACH_SLUG_wave_height
+    name: Wave Height
+  - entity: sensor.YOUR_BEACH_SLUG_wind_speed
+    name: Wind Speed
+  - entity: sensor.YOUR_BEACH_SLUG_sky_condition
+    name: Sky
+  - entity: binary_sensor.YOUR_BEACH_SLUG_lifeguard_present
+    name: Lifeguard
+  - entity: binary_sensor.YOUR_BEACH_SLUG_jellyfish_alert
+    name: Jellyfish Alert
+  - entity: binary_sensor.YOUR_BEACH_SLUG_rain_risk_high
+    name: Rain Risk
+  - entity: binary_sensor.YOUR_BEACH_SLUG_out_of_season
+    name: Out of Season
+  - type: attribute
+    entity: sensor.YOUR_BEACH_SLUG_water_quality
+    attribute: estado_info
+    name: Quality Info
+    icon: mdi:information-outline
+  - type: attribute
+    entity: sensor.YOUR_BEACH_SLUG_last_water_test
+    attribute: friendly_name
+    name: Last Sample Date
+    icon: mdi:calendar-clock

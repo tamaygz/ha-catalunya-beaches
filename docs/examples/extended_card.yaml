@@ -1,0 +1,127 @@
+# Example: Extended Beach Card (Bubble Card header + Entities details)
+# Full-featured beach card with color-coded header and detailed attributes grid.
+#
+# Requirements:
+#   - Bubble Card:  https://github.com/Clooos/Bubble-Card
+#   - card-mod:     https://github.com/thomasloven/lovelace-card-mod
+#   - Home Assistant Vertical Stack (built-in)
+#
+# Replace YOUR_BEACH_SLUG and "Your Beach Name" throughout.
+
+type: vertical-stack
+cards:
+
+  # ── Header: beach image + name + water quality state ────────────────────────
+  - type: picture-entity
+    entity: sensor.YOUR_BEACH_SLUG_beach_name       # Replace
+    show_name: true
+    show_state: false
+    aspect_ratio: 16x6
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 16px 16px 0px 0px !important;
+          overflow: hidden;
+        }
+
+  # ── Quality badge (Bubble Card button) ──────────────────────────────────────
+  - type: custom:bubble-card
+    card_type: button
+    entity: sensor.YOUR_BEACH_SLUG_water_quality    # Replace
+    name: Water Quality
+    icon: mdi:water-check
+    show_state: true
+    card_mod:
+      style: |
+        .bubble-icon-container {
+          {% set q = states('sensor.YOUR_BEACH_SLUG_water_quality') | lower %}
+          {% if 'excellent' in q or 'good' in q %}
+            {% set rgb = '46,125,50' %}
+          {% elif 'acceptable' in q %}
+            {% set rgb = '204,102,0' %}
+          {% elif 'poor' in q %}
+            {% set rgb = '198,40,40' %}
+          {% elif 'season' in q %}
+            {% set rgb = '85,85,85' %}
+          {% else %}
+            {% set rgb = '51,51,51' %}
+          {% endif %}
+          background: rgba({{ rgb }}, 0.25) !important;
+        }
+        ha-card {
+          border-radius: 0px !important;
+        }
+
+  # ── Core sensors ────────────────────────────────────────────────────────────
+  - type: entities
+    title: Current Conditions
+    entities:
+      - entity: sensor.YOUR_BEACH_SLUG_water_temperature
+        name: Water Temp
+      - entity: sensor.YOUR_BEACH_SLUG_air_temperature
+        name: Air Temp
+      - entity: sensor.YOUR_BEACH_SLUG_uv_index
+        name: UV Index
+      - entity: sensor.YOUR_BEACH_SLUG_wave_height
+        name: Wave Height
+      - entity: sensor.YOUR_BEACH_SLUG_wind_speed
+        name: Wind Speed
+      - entity: sensor.YOUR_BEACH_SLUG_sky_condition
+        name: Sky
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 0px !important;
+        }
+
+  # ── Safety indicators ────────────────────────────────────────────────────────
+  - type: entities
+    title: Safety
+    entities:
+      - entity: binary_sensor.YOUR_BEACH_SLUG_lifeguard_present
+        name: Lifeguard Present
+      - entity: binary_sensor.YOUR_BEACH_SLUG_water_quality_good
+        name: Water Quality Good
+      - entity: sensor.YOUR_BEACH_SLUG_jellyfish_status
+        name: Jellyfish Status
+      - entity: binary_sensor.YOUR_BEACH_SLUG_jellyfish_alert
+        name: Jellyfish Alert
+      - entity: binary_sensor.YOUR_BEACH_SLUG_rain_risk_high
+        name: High Rain Risk
+      - entity: binary_sensor.YOUR_BEACH_SLUG_out_of_season
+        name: Out of Season
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 0px !important;
+        }
+
+  # ── Quality detail attributes ────────────────────────────────────────────────
+  - type: entities
+    title: Quality Details
+    entities:
+      - type: attribute
+        entity: sensor.YOUR_BEACH_SLUG_water_quality
+        attribute: estado_info
+        name: Status Description
+        icon: mdi:information-outline
+      - type: attribute
+        entity: sensor.YOUR_BEACH_SLUG_water_quality
+        attribute: last_update
+        name: Quality Updated
+        icon: mdi:calendar-clock
+      - type: attribute
+        entity: sensor.YOUR_BEACH_SLUG_jellyfish_status
+        attribute: species
+        name: Jellyfish Species
+        icon: mdi:jellyfish
+      - type: attribute
+        entity: sensor.YOUR_BEACH_SLUG_jellyfish_status
+        attribute: last_update
+        name: Jellyfish Updated
+        icon: mdi:calendar-clock
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 0px 0px 16px 16px !important;
+        }
