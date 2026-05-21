@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
-from zoneinfo import ZoneInfo
+from pathlib import Path
+from typing import TYPE_CHECKING
+from urllib.parse import urljoin, urlparse
 
+import aiohttp
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -27,6 +31,17 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     """Class to manage fetching beach data from the API."""
 
     config_entry: CatalunyaBeachesConfigEntry
+    _STATIC_URL_PREFIX = f"/local/{DOMAIN}"
+    _STATIC_DIR_NAME = DOMAIN
+    _HTTP_OK_STATUS = 200
+    _ASSET_BASE_URLS = (
+        "https://aca-web.gencat.cat/images/platges/",
+        "http://aca-web.gencat.cat/images/platges/",
+        "https://aplicacions.aca.gencat.cat/platges/AppJava/images/platges/",
+        "http://aplicacions.aca.gencat.cat/platges/AppJava/images/platges/",
+        "https://aplicacions.aca.gencat.cat/platges/AppJava/images/iconos/",
+        "http://aplicacions.aca.gencat.cat/platges/AppJava/images/iconos/",
+    )
 
     def __init__(
         self,
@@ -62,6 +77,7 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
         try:
             client = self.config_entry.runtime_data.client
             beach_info = await client.async_get_beach_detail(self.beach_id)
+            await self._async_cache_assets(beach_info)
 
             LOGGER.debug(
                 "Successfully updated data for beach %s (%s)",
@@ -114,6 +130,93 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     async def async_force_refresh(self) -> None:
         """Force an immediate refresh of beach data."""
         await self.async_request_refresh()
+
+    async def _async_cache_assets(self, beach_info: BeachInfo) -> None:
+        """Cache remote beach assets locally and replace URLs with local static URLs."""
+        beach_info.imagenes = [
+            await self._async_cache_single_asset(asset) for asset in beach_info.imagenes
+        ]
+
+        beach_info.iconos = {
+            key: await self._async_cache_single_asset(asset)
+            for key, asset in beach_info.iconos.items()
+        }
+
+        if beach_info.calidad_playa and beach_info.calidad_playa.icono:
+            beach_info.calidad_playa.icono = await self._async_cache_single_asset(
+                beach_info.calidad_playa.icono
+            )
+
+        if beach_info.medusas and beach_info.medusas.icono:
+            beach_info.medusas.icono = await self._async_cache_single_asset(
+                beach_info.medusas.icono
+            )
+
+    async def _async_cache_single_asset(self, asset_reference: str) -> str:
+        """Cache one remote asset locally and return a static `/local` URL."""
+        if not asset_reference:
+            return asset_reference
+        if asset_reference.startswith(self._STATIC_URL_PREFIX):
+            return asset_reference
+
+        candidate_urls = self._build_candidate_urls(asset_reference)
+        for candidate_url in candidate_urls:
+            filename = Path(urlparse(candidate_url).path).name
+            if not filename:
+                continue
+
+            local_path = (
+                Path(self.hass.config.path("www"))
+                / self._STATIC_DIR_NAME
+                / str(self.beach_id)
+                / filename
+            )
+            local_url = f"{self._STATIC_URL_PREFIX}/{self.beach_id}/{filename}"
+
+            if local_path.exists():
+                return local_url
+
+            session = async_get_clientsession(self.hass)
+            try:
+                async with session.get(candidate_url) as response:
+                    if response.status != self._HTTP_OK_STATUS:
+                        continue
+                    content_type = response.headers.get("Content-Type", "")
+                    if not content_type.startswith("image/"):
+                        continue
+                    content = await response.read()
+            except (
+                aiohttp.ClientError,
+                OSError,
+                TimeoutError,
+            ) as exception:  # pragma: no cover - defensive network handling
+                LOGGER.debug(
+                    "Failed to cache asset from %s: %s",
+                    candidate_url,
+                    exception,
+                )
+                continue
+
+            if not content:
+                continue
+
+            await asyncio.to_thread(
+                local_path.parent.mkdir,
+                parents=True,
+                exist_ok=True,
+            )
+            await asyncio.to_thread(local_path.write_bytes, content)
+            return local_url
+
+        return candidate_urls[0] if candidate_urls else asset_reference
+
+    def _build_candidate_urls(self, asset_reference: str) -> list[str]:
+        """Build candidate absolute URLs for remote assets."""
+        if asset_reference.startswith(("http://", "https://")):
+            return [asset_reference]
+
+        sanitized = asset_reference.lstrip("/")
+        return [urljoin(base_url, sanitized) for base_url in self._ASSET_BASE_URLS]
 
     def update_interval_seconds(self, new_interval: int) -> None:
         """Update the polling interval.

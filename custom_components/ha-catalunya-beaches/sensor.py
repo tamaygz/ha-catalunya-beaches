@@ -415,6 +415,9 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
         beach_info = self.coordinator.data
         if beach_info.imagenes and len(beach_info.imagenes) > 0:
             # Return the first (primary) image URL
-            return f"https://aca-web.gencat.cat/images/platges/{beach_info.imagenes[0]}"
+            image_url = beach_info.imagenes[0]
+            if image_url.startswith(("http://", "https://", "/")):
+                return image_url
+            return f"https://aca-web.gencat.cat/images/platges/{image_url}"
 
         return None
