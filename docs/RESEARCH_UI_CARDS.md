@@ -1,0 +1,119 @@
+# UI Research & Recommendations (Lovelace + Bubble Card)
+
+## Scope
+Research Home Assistant UI visualization options (built-in + Bubble Card), audit all available entities/attributes, and provide recommendations for dashboard design and integration improvements.
+
+## Bubble Card notes (Clooos/Bubble-Card)
+Bubble Card is a minimalist card collection that includes **pop-ups**, **sub-buttons**, **horizontal buttons stack**, and multiple card types including button, media player, cover, select, climate, calendar, separator, and layout helpers. Pop-ups are a core capability and can be triggered via navigation/actions or entity states.  
+Source: https://github.com/Clooos/Bubble-Card (README).
+
+## Integration UI data inventory
+### Sensors (always or selectable)
+- **Water Temperature**: state in °C; attributes: `test_estado`, `test_date` (latest water test).
+- **Air Temperature**: state in °C.
+- **Water Quality**: state string; attributes: `estado_info`, optional `destacar`, `last_update`.
+- **UV Index**: numeric; attributes: `uv_min`.
+- **Wave Height**: meters.
+- **Wind Speed**: m/s; attributes: `direction` (degrees).
+- **Sky Condition**: translated text.
+- **Jellyfish Status**: text; attributes: `danger_level`, `species[]`, `last_update`.
+- **Last Water Test Date**: timestamp.
+- **Description**: truncated state; attributes: `full_description`, `length`.
+- **Beach Info**: short status/alert text.
+- **Beach Name** (always present): state with rich attributes:
+  - `beach_id`, `municipality`, `coast`
+  - `images[]`, `image_count`, `primary_image`
+  - `icon_water_*`, `icon_jellyfish_*` (URLs to official icons)
+  - `entity_picture` is set to the primary beach image
+
+### Binary sensors
+- **Lifeguard Present**
+- **Out of Season**
+- **Water Quality Good**
+- **Jellyfish Alert**
+- **Rain Risk High**
+
+### Button
+- **Refresh** button; attributes: `last_fetched`
+
+### Services
+- `refresh_all`, `refresh_beach` (action-oriented UI can expose these)
+
+## UI recommendations (built-in Lovelace cards)
+### 1) At-a-glance summary
+**Tile / Entities / Glance** card with:
+- Water temp, air temp, UV, wave height, wind speed
+- Water quality + jellyfish alert + lifeguard present
+
+### 2) Hero visual
+**Picture-Entity** using `sensor.<beach>_beach_name` (uses `entity_picture`):
+- Display primary beach image with the beach name
+- Combine with **Markdown** or **Entity** card for description/alerts
+
+### 3) Trends
+**History Graph**:
+- Water temp, air temp, wind speed, UV index
+**Statistics Graph** (if long-term trends are important)
+
+### 4) Risk & safety status
+- **Conditional** card or **Binary Sensor** tiles:
+  - Water quality good / jellyfish alert / rain risk / out of season
+- **Gauge** for UV Index with warning thresholds
+
+### 5) Details and explanation
+- **Markdown** card with:
+  - `description`, `beach_info`, water quality `estado_info`
+  - Helpful during out-of-season or rain disturbance events
+
+### 6) Optional: maps (requires exposing coordinates)
+- If latitude/longitude were exposed as attributes or as a device_tracker/geo entity, a **Map** card can show beach location, and nearby beach recommendations could be placed in an **Entities** or **Markdown** card.
+
+## Bubble Card dashboard concepts
+### A) Beach overview bubble
+- **Bubble Card: Button**
+  - Main icon = beach
+  - Sub-buttons for quick metrics: water temp, air temp, UV, water quality
+  - Conditional sub-buttons for alerts: jellyfish, rain risk, out of season
+
+### B) Pop-up details
+- **Bubble Card: Pop-up**
+  - Triggered from the overview bubble
+  - Contents: picture-entity (beach image), detailed entities list, history graph, markdown description, jellyfish species list
+
+### C) Quick actions
+- **Bubble Card: Sub-buttons only** or **Horizontal buttons stack**
+  - Refresh button
+  - Service calls for `refresh_all` / `refresh_beach`
+
+## Visualization ideas using existing data
+1. **Image-centric tile**: use `entity_picture` + beach name as a hero header.
+2. **Icon strip**: show official water/jellyfish icon URLs in markdown or custom button-card.
+3. **Risk ribbon**: color-coded badges based on binary sensors (lifeguard, rain risk, out of season).
+4. **Trend section**: water temp + wind speed + UV history graph.
+5. **Data freshness**: surface `last_fetched` attribute from refresh button or coordinator.
+
+## Recommended integration improvements (to better support UI)
+1. **Translation alignment**: `strings.json` uses `user/select_beach/configure_entities`, but `translations/en.json` & `translations/ca.json` use different step IDs. Align them to ensure translations work.
+2. **Error key alignment**: config flow uses `connection`/`beach_not_found`, but translations define `cannot_connect`/`invalid_beach`.
+3. **Options flow action fields**: `force_refresh`/`delete_history` should be treated as actions only (not stored in options).
+4. **DeviceInfo entry_type**: use the enum `DeviceEntryType.SERVICE` or omit the field.
+5. **Expose coordinates**: add lat/long as attributes for map cards.
+6. **Expose icon URLs as separate sensors**: optional image/URL sensors for official status icons.
+7. **Normalize water quality/jellyfish states**: use translation keys to enable localized state labels in UI.
+8. **Unit consistency**: wind speed is in m/s in code but README says km/h.
+
+## Suggested "starter" UI layouts
+### Minimal
+- Picture-entity (beach image + name)
+- Entities card (temps, UV, water quality, lifeguard)
+
+### Safety-focused
+- Binary sensor tiles (lifeguard, water quality good, jellyfish alert, rain risk)
+- Gauge (UV)
+- Entities (water temp, wave height, wind speed)
+
+### Detailed / dashboard
+- Picture-entity header
+- Entities + history graph
+- Markdown (description + beach info)
+- Bubble Card pop-up for detailed attributes
