@@ -14,7 +14,7 @@ Source: https://github.com/Clooos/Bubble-Card (README).
 - **Water Quality**: state string; attributes: `estado_info`, optional `destacar`, `last_update`.
 - **UV Index**: numeric; attributes: `uv_min`.
 - **Wave Height**: meters.
-- **Wind Speed**: m/s; attributes: `direction` (degrees).
+- **Wind Speed**: km/h; attributes: `direction` (degrees).
 - **Sky Condition**: translated text.
 - **Jellyfish Status**: text; attributes: `danger_level`, `species[]`, `last_update`.
 - **Last Water Test Date**: timestamp.

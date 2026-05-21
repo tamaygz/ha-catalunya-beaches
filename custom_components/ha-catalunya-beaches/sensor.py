@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature, UnitOfLength, UnitOfSpeed
+from homeassistant.const import UnitOfLength, UnitOfSpeed, UnitOfTemperature
 from homeassistant.helpers.typing import StateType
 
 from .const import (
@@ -30,6 +30,7 @@ from .const import (
     ENTITY_WATER_TEMP,
     ENTITY_WAVE_HEIGHT,
     ENTITY_WIND_SPEED,
+    JELLYFISH_STATUS,
     LOGGER,
     SKY_CONDITIONS,
     WATER_QUALITY_STATUS,
@@ -84,7 +85,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=ENTITY_WIND_SPEED,
         name="Wind Speed",
         device_class=SensorDeviceClass.WIND_SPEED,
-        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:weather-windy",
     ),
@@ -242,7 +243,8 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
 
             elif key == ENTITY_JELLYFISH_STATUS:
                 if beach_info.medusas:
-                    return beach_info.medusas.peligrosidad or "Unknown"
+                    status = beach_info.medusas.peligrosidad or "Unknown"
+                    return JELLYFISH_STATUS.get(status, status)
                 return None
 
             elif key == ENTITY_LAST_TEST_DATE:

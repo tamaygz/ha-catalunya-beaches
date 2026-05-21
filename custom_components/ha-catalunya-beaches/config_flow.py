@@ -105,7 +105,7 @@ class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._beaches = await client.async_get_beach_list()
             except CatalunyaBeachesApiClientCommunicationError as exception:
                 LOGGER.error("Communication error fetching beach list: %s", exception)
-                errors["base"] = "connection"
+                errors["base"] = "cannot_connect"
             except CatalunyaBeachesApiClientError as exception:
                 LOGGER.exception("Error fetching beach list: %s", exception)
                 errors["base"] = "unknown"
@@ -131,7 +131,7 @@ class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return await self.async_step_configure_entities()
 
-            errors["base"] = "beach_not_found"
+            errors["base"] = "invalid_beach"
 
         # Create beach selection options
         beach_options = {
@@ -278,6 +278,11 @@ class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for Catalunya Beaches."""
 
+    def __init__(self) -> None:
+        """Initialize the options flow."""
+        super().__init__()
+        self._pending_options: dict[str, Any] | None = None
+
     async def async_step_init(
         self,
         user_input: dict[str, Any] | None = None,
@@ -292,7 +297,25 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
         """Configure beach options."""
         errors: dict[str, str] = {}
 
+        current_interval = self.config_entry.options.get(
+            CONF_UPDATE_INTERVAL,
+            self.config_entry.data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
+        )
+        current_entities = self.config_entry.options.get(
+            CONF_ENABLED_ENTITIES,
+            DEFAULT_ENABLED_ENTITIES,
+        )
+
         if user_input is not None:
+            options = {
+                CONF_UPDATE_INTERVAL: user_input.get(
+                    CONF_UPDATE_INTERVAL, current_interval
+                ),
+                CONF_ENABLED_ENTITIES: user_input.get(
+                    CONF_ENABLED_ENTITIES, current_entities
+                ),
+            }
+
             if user_input.get("force_refresh"):
                 # Trigger force refresh. The coordinator is created during setup of the
                 # config entry and stored in `hass.data[DOMAIN][entry_id]`. It's possible
@@ -302,31 +325,20 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
                         self.config_entry.entry_id
                     ].coordinator
                     await coordinator.async_force_refresh()
-                    return self.async_create_entry(
-                        title="", data=self.config_entry.options
-                    )
                 except Exception:  # pragma: no cover - defensive handling
                     LOGGER.exception(
                         "Coordinator not available for %s when forcing refresh",
                         self.config_entry.entry_id,
                     )
-                    errors["base"] = "not_configured"
+                    errors["base"] = "unknown"
 
-            if user_input.get("delete_history"):
+            if user_input.get("delete_history") and not errors:
+                self._pending_options = options
                 return await self.async_step_confirm_delete()
 
             # If there were no errors (e.g. missing coordinator), update options.
             if not errors:
-                return self.async_create_entry(title="", data=user_input)
-
-        current_interval = self.config_entry.options.get(
-            CONF_UPDATE_INTERVAL,
-            self.config_entry.data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
-        )
-        current_entities = self.config_entry.options.get(
-            CONF_ENABLED_ENTITIES,
-            DEFAULT_ENABLED_ENTITIES,
-        )
+                return self.async_create_entry(title="", data=options)
 
         return self.async_show_form(
             step_id="configure",
@@ -410,6 +422,7 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Confirm deletion of historical data."""
+        options = self._pending_options or self.config_entry.options
         if user_input is not None:
             if user_input.get("confirm"):
                 # Delete historical data
@@ -421,7 +434,8 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
                 )
                 # TODO: Implement actual history deletion via recorder service
 
-            return self.async_create_entry(title="", data=self.config_entry.options)
+            self._pending_options = None
+            return self.async_create_entry(title="", data=options)
 
         return self.async_show_form(
             step_id="confirm_delete",

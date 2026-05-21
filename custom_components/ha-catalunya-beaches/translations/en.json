@@ -1,26 +1,26 @@
 {
     "config": {
         "step": {
-            "language": {
+            "user": {
                 "title": "Language Selection",
                 "description": "Select the language for beach information",
                 "data": {
                     "language": "Language"
                 }
             },
-            "beach": {
+            "select_beach": {
                 "title": "Beach Selection",
                 "description": "Select a beach to monitor",
                 "data": {
                     "beach_id": "Beach"
                 }
             },
-            "entities": {
+            "configure_entities": {
                 "title": "Entity Configuration",
-                "description": "Select which entities to enable for this beach",
+                "description": "Configure update interval and select entities to enable for {beach_name}",
                 "data": {
-                    "enabled_entities": "Enabled Entities",
-                    "update_interval": "Update Interval (seconds)"
+                    "update_interval": "Update Interval (seconds)",
+                    "enabled_entities": "Enabled Entities"
                 }
             }
         },
@@ -35,14 +35,21 @@
     },
     "options": {
         "step": {
-            "init": {
+            "configure": {
                 "title": "Beach Options",
                 "description": "Configure update interval and enabled entities",
                 "data": {
                     "update_interval": "Update Interval (seconds)",
                     "enabled_entities": "Enabled Entities",
                     "force_refresh": "Force Refresh Data Now",
-                    "confirm_delete_history": "Delete All Historical Data"
+                    "delete_history": "Delete All Historical Data"
+                }
+            },
+            "confirm_delete": {
+                "title": "Confirm Delete",
+                "description": "Are you sure you want to delete all historical data for {beach_name}?",
+                "data": {
+                    "confirm": "Confirm deletion"
                 }
             }
         }
@@ -63,6 +70,7 @@
                     "acceptable": "Acceptable",
                     "poor": "Poor",
                     "very_poor": "Very Poor",
+                    "out_of_season": "Out of season",
                     "unknown": "Unknown"
                 }
             },
@@ -95,6 +103,7 @@
                     "moderate": "Moderate",
                     "high": "High",
                     "very_high": "Very High",
+                    "out_of_season": "Out of season",
                     "unknown": "Unknown"
                 }
             },
