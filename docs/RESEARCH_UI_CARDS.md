@@ -122,16 +122,20 @@ Based on the dashboard examples in https://github.com/PlanetCitizen1829381/ha-ns
 Example:
 ```yaml
 type: map
-title: Catalunya beaches
+title: Catalunya beaches – Water Quality
+theme_mode: auto
 auto_fit: true
+grid_options:
+  columns: full
+  rows: 6
 entities:
-  - entity: sensor.platja_de_barcelona_beach_name
-    name: Platja de Barcelona
+  - entity: sensor.platja_de_barcelona_water_quality
     label_mode: state
-  - entity: sensor.platja_de_la_nova_mar_bella_beach_name
-    name: Platja de la Nova Mar Bella
+  - entity: sensor.platja_de_la_nova_mar_bella_water_quality
     label_mode: state
 ```
+
+> See [`docs/examples/map_card.yaml`](examples/map_card.yaml) for the full template.
 
 ## Visualization ideas using existing data
 1. **Image-centric tile**: use `entity_picture` + beach name as a hero header.
@@ -140,15 +144,36 @@ entities:
 4. **Trend section**: water temp + wind speed + UV history graph.
 5. **Data freshness**: surface `last_fetched` attribute from refresh button or coordinator.
 
+## Ready-to-use YAML examples
+Copy-pasteable Lovelace YAML files inspired by [ha-nsw-beachwatch](https://github.com/PlanetCitizen1829381/ha-nsw-beachwatch) and adapted to our entities/states.
+
+| File | Dependencies | Description |
+|------|-------------|-------------|
+| [`examples/map_card.yaml`](examples/map_card.yaml) | built-in | Multi-beach map with quality state pin labels, `theme_mode: auto`, full-width grid |
+| [`examples/flat_summary_card.yaml`](examples/flat_summary_card.yaml) | built-in | Compact entities list — no custom cards required |
+| [`examples/short_advice_card.yaml`](examples/short_advice_card.yaml) | Bubble Card + card-mod | Color-coded compact banner using Jinja2 template |
+| [`examples/extended_card.yaml`](examples/extended_card.yaml) | Bubble Card + card-mod | Full card: beach image header, quality badge, conditions, safety, and attributes |
+
+**Color scheme used in Bubble Card examples:**
+
+| State | Color |
+|-------|-------|
+| Excellent / Good | Green `rgba(46,125,50, 0.25)` |
+| Acceptable | Amber `rgba(204,102,0, 0.25)` |
+| Poor / Very Poor | Red `rgba(198,40,40, 0.25)` |
+| Out of season | Grey `rgba(85,85,85, 0.25)` |
+| Unavailable / Unknown | Dark `rgba(51,51,51, 0.25)` |
+
 ## Implemented integration improvements (UI-related)
 1. ✅ Translation step IDs aligned between flow and translations.
 2. ✅ Error keys aligned between flow and translations.
 3. ✅ Options flow treats `force_refresh`/`delete_history` as action-only.
 4. ✅ Device entry type uses `DeviceEntryType.SERVICE`.
-5. ✅ Coordinates exposed for map cards.
+5. ✅ Coordinates exposed on `beach_name`, `water_quality`, and `jellyfish_status` sensors for map cards.
 6. ✅ Water quality/jellyfish states normalized for translation keys.
 7. ✅ Wind speed unit aligned to km/h.
 8. ✅ Detected image/icon assets cached locally and exposed with token-free `/local/...` URLs.
+9. ✅ Ready-to-use YAML examples created in `docs/examples/` (map card, flat summary, short advice, extended card).
 
 ## Suggested "starter" UI layouts
 ### Minimal
