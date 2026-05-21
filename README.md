@@ -162,6 +162,10 @@ When cached, related sensor attributes and `entity_picture` expose token-free UR
 This makes Bubble Card / Markdown / Picture cards render reliably without `/api/...token=`
 URLs.
 
+> **Security notes:** Assets are fetched exclusively over HTTPS. Only JPEG, PNG, GIF, and
+> WebP content types are accepted (SVG and other types are blocked). Downloads are capped
+> at 5 MB per file. At most 4 files are fetched concurrently per refresh cycle.
+
 ## Data Source
 
 This integration uses the official Catalan Water Agency (Agència Catalana de l'Aigua) API:
