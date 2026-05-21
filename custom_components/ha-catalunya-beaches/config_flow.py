@@ -279,7 +279,7 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for Catalunya Beaches."""
 
     def __init__(self) -> None:
-        """Initialize the options flow with pending state for multi-step actions."""
+        """Initialize the options flow with pending option storage for delete confirmation."""
         super().__init__()
         self._pending_options: dict[str, Any] | None = None
 
@@ -425,6 +425,7 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Confirm deletion of historical data."""
         if self._pending_options is None and user_input is None:
+            # Guard against reaching the confirm step without context from configure.
             return await self.async_step_configure()
 
         # If the confirmation is posted without pending options, fall back to stored values.
