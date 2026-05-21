@@ -23,8 +23,9 @@ Source: https://github.com/Clooos/Bubble-Card (README).
 - **Beach Name** (always present): state with rich attributes:
   - `beach_id`, `municipality`, `coast`
   - `images[]`, `image_count`, `primary_image`
-  - `icon_water_*`, `icon_jellyfish_*` (URLs to official icons)
+  - `icon_water_*`, `icon_jellyfish_*` (cached URL values)
   - `entity_picture` is set to the primary beach image
+  - image/icon URLs are exposed as token-free `/local/ha-catalunya-beaches/<beach_id>/<filename>`
 
 ### Binary sensors
 - **Lifeguard Present**
@@ -137,15 +138,15 @@ entities:
 4. **Trend section**: water temp + wind speed + UV history graph.
 5. **Data freshness**: surface `last_fetched` attribute from refresh button or coordinator.
 
-## Recommended integration improvements (to better support UI)
-1. **Translation alignment**: `strings.json` uses `user/select_beach/configure_entities`, but `translations/en.json` & `translations/ca.json` use different step IDs. Align them to ensure translations work.
-2. **Error key alignment**: config flow uses `connection`/`beach_not_found`, but translations define `cannot_connect`/`invalid_beach`.
-3. **Options flow action fields**: `force_refresh`/`delete_history` should be treated as actions only (not stored in options).
-4. **DeviceInfo entry_type**: use the enum `DeviceEntryType.SERVICE` or omit the field.
-5. **Expose coordinates**: add lat/long as attributes for map cards.
-6. **Expose icon URLs as separate sensors**: optional image/URL sensors for official status icons.
-7. **Normalize water quality/jellyfish states**: use translation keys to enable localized state labels in UI.
-8. **Unit consistency**: wind speed is in m/s in code but README says km/h.
+## Implemented integration improvements (UI-related)
+1. ✅ Translation step IDs aligned between flow and translations.
+2. ✅ Error keys aligned between flow and translations.
+3. ✅ Options flow treats `force_refresh`/`delete_history` as action-only.
+4. ✅ Device entry type uses `DeviceEntryType.SERVICE`.
+5. ✅ Coordinates exposed for map cards.
+6. ✅ Water quality/jellyfish states normalized for translation keys.
+7. ✅ Wind speed unit aligned to km/h.
+8. ✅ Detected image/icon assets cached locally and exposed with token-free `/local/...` URLs.
 
 ## Suggested "starter" UI layouts
 ### Minimal

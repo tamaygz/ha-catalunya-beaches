@@ -141,6 +141,20 @@ latitude/longitude when coordinates are available from the API (detail response 
 stored beach list values captured during setup). These coordinates can be reused in map
 cards or templates.
 
+### Local media URLs for UI cards
+
+Beach images and status icons detected from the API are cached locally in Home Assistant
+under:
+
+- `/config/www/ha-catalunya-beaches/<beach_id>/<filename>`
+
+When cached, related sensor attributes and `entity_picture` expose token-free URLs:
+
+- `/local/ha-catalunya-beaches/<beach_id>/<filename>`
+
+This makes Bubble Card / Markdown / Picture cards render reliably without `/api/...token=`
+URLs.
+
 ## Data Source
 
 This integration uses the official Catalan Water Agency (Agència Catalana de l'Aigua) API:

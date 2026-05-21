@@ -2,6 +2,19 @@
 
 ## Changes Made Based on Beach Data Analysis
 
+### 0. Local Media Asset Caching (coordinator.py / sensor.py / docs)
+**Added token-free UI image/icon handling:**
+
+- Detected remote beach images/icons are cached locally under:
+  - `/config/www/ha-catalunya-beaches/<beach_id>/<filename>`
+- Sensor attributes and `entity_picture` expose:
+  - `/local/ha-catalunya-beaches/<beach_id>/<filename>`
+- Cache logic includes timeout, size limits, path/filename hardening, and reuse of already-downloaded files.
+
+**Rationale:**
+- Avoid non-rendering `/api/...token=` URLs in frontend cards.
+- Improve reliability for Bubble Card/Markdown/Picture-based dashboards.
+
 ### 1. Water Quality States (const.py)
 **Added missing water quality classifications found in real beach data:**
 
