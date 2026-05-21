@@ -125,6 +125,17 @@ entities:
   - sensor.platja_de_barcelona_uv_index
 ```
 
+**Beach map card:**
+```yaml
+type: map
+title: Catalunya beaches
+auto_fit: true
+entities:
+  - entity: sensor.platja_de_barcelona_beach_name
+    name: Platja de Barcelona
+    label_mode: state
+```
+
 The **Beach Name** sensor includes attributes for municipality, coast, images, icons, and
 latitude/longitude when coordinates are available from the API (detail response or the
 stored beach list values captured during setup). These coordinates can be reused in map

@@ -65,8 +65,10 @@ Source: https://github.com/Clooos/Bubble-Card (README).
   - `description`, `beach_info`, water quality `estado_info`
   - Helpful during out-of-season or rain disturbance events
 
-### 6) Optional: maps (requires exposing coordinates)
-- If latitude/longitude were exposed as attributes or as a device_tracker/geo entity, a **Map** card can show beach location, and nearby beach recommendations could be placed in an **Entities** or **Markdown** card.
+### 6) Map card (built-in)
+- The Home Assistant **Map** card only shows entities with `latitude`/`longitude` attributes (our `sensor.<beach>_beach_name` includes them).
+- Best practice: enable `auto_fit` so the viewport fits all beaches, and use `label_mode: state` to show the beach name.
+- Optional: set `show_all: true` if you want every beach name sensor with coordinates to appear automatically.
 
 ## Bubble Card dashboard concepts
 ### A) Beach overview bubble
@@ -109,10 +111,24 @@ Based on the dashboard examples in https://github.com/PlanetCitizen1829381/ha-ns
 - `sensor.<beach>_water_quality`, `binary_sensor.<beach>_jellyfish_alert`
 - Attributes: `test_date`, `estado_info`
 
-### 4) Map card (optional, if coords exposed)
+### 4) Map card (built-in)
 **Goal:** Multi-beach overview with state labels.  
-**Adaptation:** Map card with each beach entity, `label_mode: state`.  
-**Requires:** latitude/longitude attributes or a dedicated geo entity.
+**Adaptation:** Map card using the beach name sensors (they carry coordinates), `label_mode: state`.  
+**Requires:** latitude/longitude attributes on the selected entities.
+
+Example:
+```yaml
+type: map
+title: Catalunya beaches
+auto_fit: true
+entities:
+  - entity: sensor.platja_de_barcelona_beach_name
+    name: Platja de Barcelona
+    label_mode: state
+  - entity: sensor.platja_de_la_nova_mar_bella_beach_name
+    name: Platja de la Nova Mar Bella
+    label_mode: state
+```
 
 ## Visualization ideas using existing data
 1. **Image-centric tile**: use `entity_picture` + beach name as a hero header.
