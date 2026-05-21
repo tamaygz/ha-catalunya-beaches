@@ -175,7 +175,12 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
             if not filename:
                 continue
             filename = re.sub(r"[^A-Za-z0-9_.()-]", "_", filename)
-            if not filename or filename in {".", ".."} or ".." in filename:
+            if (
+                not filename
+                or filename in {".", ".."}
+                or ".." in filename
+                or filename.startswith("-")
+            ):
                 continue
 
             static_root = (
@@ -184,9 +189,9 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
                 / str(self.beach_id)
             )
             local_path = static_root / filename
-            if static_root.resolve(strict=False) not in local_path.resolve(
-                strict=False
-            ).parents:
+            if not local_path.resolve(strict=False).is_relative_to(
+                static_root.resolve(strict=False)
+            ):
                 continue
             local_url = f"{self._STATIC_URL_PREFIX}/{self.beach_id}/{filename}"
 
@@ -202,17 +207,21 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
                     if response.status != self._HTTP_OK_STATUS:
                         continue
                     content_length = response.headers.get("Content-Length")
-                    if (
-                        content_length
-                        and content_length.isdigit()
-                        and int(content_length) > self._MAX_ASSET_BYTES
-                    ):
-                        LOGGER.debug(
-                            "Skipping oversized asset from %s (%s bytes)",
-                            candidate_url,
-                            content_length,
-                        )
-                        continue
+                    if content_length:
+                        try:
+                            content_length_int = int(content_length)
+                        except ValueError:
+                            content_length_int = None
+                        if (
+                            content_length_int is not None
+                            and content_length_int > self._MAX_ASSET_BYTES
+                        ):
+                            LOGGER.debug(
+                                "Skipping oversized asset from %s (%s bytes)",
+                                candidate_url,
+                                content_length_int,
+                            )
+                            continue
                     content_type = response.headers.get("Content-Type", "")
                     if not content_type.startswith("image/"):
                         LOGGER.debug(
