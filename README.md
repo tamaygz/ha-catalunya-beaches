@@ -126,8 +126,9 @@ entities:
 ```
 
 The **Beach Name** sensor includes attributes for municipality, coast, images, icons, and
-latitude/longitude when the API provides coordinates. These coordinates can be reused in
-map cards or templates.
+latitude/longitude when coordinates are available from the API (detail response or the
+stored beach list values captured during setup). These coordinates can be reused in map
+cards or templates.
 
 ## Data Source
 
