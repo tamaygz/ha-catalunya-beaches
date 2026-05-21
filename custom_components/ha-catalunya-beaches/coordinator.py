@@ -162,6 +162,67 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
                 beach_info.medusas.icono
             )
 
+        # Prune cached files that are no longer referenced by the current API response
+        referenced_files = self._collect_local_filenames(beach_info)
+        await self._async_prune_cache(referenced_files)
+
+    def _collect_local_filenames(self, beach_info: BeachInfo) -> set[str]:
+        """Collect filenames of all locally cached assets referenced by beach_info."""
+        filenames: set[str] = set()
+        prefix = f"{self._STATIC_URL_PREFIX}/{self.beach_id}/"
+
+        def _add_if_local(url: str | None) -> None:
+            if url and url.startswith(prefix):
+                filenames.add(url[len(prefix):])
+
+        if beach_info.imagenes:
+            for url in beach_info.imagenes:
+                _add_if_local(url)
+        if beach_info.iconos:
+            for url in beach_info.iconos.values():
+                _add_if_local(url)
+        if beach_info.calidad_playa and beach_info.calidad_playa.icono:
+            _add_if_local(beach_info.calidad_playa.icono)
+        if beach_info.medusas and beach_info.medusas.icono:
+            _add_if_local(beach_info.medusas.icono)
+
+        return filenames
+
+    async def _async_prune_cache(self, referenced_filenames: set[str]) -> None:
+        """Remove cached files not referenced by the current API response."""
+        static_root = (
+            Path(self.hass.config.path("www"))
+            / self._STATIC_DIR_NAME
+            / str(self.beach_id)
+        )
+
+        def _prune() -> None:
+            if not static_root.exists():
+                return
+            try:
+                for cached_file in static_root.iterdir():
+                    if (
+                        cached_file.is_file()
+                        and cached_file.name not in referenced_filenames
+                    ):
+                        try:
+                            cached_file.unlink()
+                            LOGGER.debug(
+                                "Pruned unreferenced cached asset: %s", cached_file
+                            )
+                        except OSError as exc:
+                            LOGGER.debug(
+                                "Failed to prune cached asset %s: %s",
+                                cached_file,
+                                exc,
+                            )
+            except OSError as exc:
+                LOGGER.debug(
+                    "Failed to scan cache directory %s: %s", static_root, exc
+                )
+
+        await asyncio.to_thread(_prune)
+
     async def _async_cache_single_asset(self, asset_reference: str) -> str:
         """Cache one remote asset locally and return a static `/local` URL."""
         if not asset_reference:
@@ -275,7 +336,13 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     def _build_candidate_urls(self, asset_reference: str) -> list[str]:
         """Build candidate absolute URLs for remote assets."""
         if asset_reference.startswith(("http://", "https://")):
-            return [asset_reference]
+            # Only allow URLs from the known allowlist to prevent SSRF
+            if any(asset_reference.startswith(base) for base in self._ASSET_BASE_URLS):
+                return [asset_reference]
+            LOGGER.debug(
+                "Ignoring absolute URL not in allowed base URLs: %s", asset_reference
+            )
+            return []
 
         sanitized = asset_reference.lstrip("/")
         return [urljoin(base_url, sanitized) for base_url in self._ASSET_BASE_URLS]
