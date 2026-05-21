@@ -125,6 +125,47 @@ entities:
   - sensor.platja_de_barcelona_uv_index
 ```
 
+**Beach map card:**
+```yaml
+type: map
+title: Catalunya beaches
+auto_fit: true
+entities:
+  - entity: sensor.platja_de_barcelona_beach_name
+    label_mode: state   # or "icon" for dynamic warning icons
+```
+
+The **Beach Name** sensor is the single map-capable entity per beach. It includes
+latitude/longitude, a `beach_status` summary attribute ("OK" or comma-separated
+warnings), `active_warnings` list, `water_quality`, and `jellyfish` attributes.
+The sensor icon changes dynamically based on the worst active warning (default
+`mdi:beach`, jellyfish → `mdi:jellyfish`, poor water → `mdi:water-alert`, out of
+season → `mdi:calendar-remove`).
+
+Map pin modes:
+- `label_mode: state` — shows the beach name text
+- `label_mode: icon` — shows the dynamic warning icon
+- `label_mode: attribute` with `attribute: beach_status` — shows warning summary
+- omit `label_mode` — shows the beach photo (`entity_picture`) as the pin image
+
+### Local media URLs for UI cards
+
+Beach images and status icons detected from the API are cached locally in Home Assistant
+under:
+
+- `/config/www/ha-catalunya-beaches/<beach_id>/<filename>`
+
+When cached, related sensor attributes and `entity_picture` expose token-free URLs:
+
+- `/local/ha-catalunya-beaches/<beach_id>/<filename>`
+
+This makes Bubble Card / Markdown / Picture cards render reliably without `/api/...token=`
+URLs.
+
+> **Security notes:** Assets are fetched exclusively over HTTPS. Only JPEG, PNG, GIF, and
+> WebP content types are accepted (SVG and other types are blocked). Downloads are capped
+> at 5 MB per file. At most 4 files are fetched concurrently per refresh cycle.
+
 ## Data Source
 
 This integration uses the official Catalan Water Agency (Agència Catalana de l'Aigua) API:

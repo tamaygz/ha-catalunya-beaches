@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
@@ -33,7 +33,7 @@ class CatalunyaBeachEntity(CoordinatorEntity[BeachDataUpdateCoordinator]):
             name=beach_name,
             manufacturer="Agència Catalana de l'Aigua",
             model="Beach Monitoring Station",
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     @property

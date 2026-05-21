@@ -52,6 +52,9 @@
           "confirm": "Confirm deletion"
         }
       }
+    },
+    "error": {
+      "unknown": "Unexpected error occurred"
     }
   },
   "entity": {
@@ -63,7 +66,16 @@
         "name": "Air Temperature"
       },
       "water_quality": {
-        "name": "Water Quality"
+        "name": "Water Quality",
+        "state": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "acceptable": "Acceptable",
+          "poor": "Poor",
+          "very_poor": "Very Poor",
+          "out_of_season": "Out of season",
+          "unknown": "Unknown"
+        }
       },
       "uv_index": {
         "name": "UV Index"
@@ -78,7 +90,16 @@
         "name": "Sky Condition"
       },
       "jellyfish_status": {
-        "name": "Jellyfish Status"
+        "name": "Jellyfish Status",
+        "state": {
+          "none": "None",
+          "low": "Low",
+          "moderate": "Moderate",
+          "high": "High",
+          "very_high": "Very High",
+          "out_of_season": "Out of season",
+          "unknown": "Unknown"
+        }
       },
       "last_test_date": {
         "name": "Last Water Test Date"

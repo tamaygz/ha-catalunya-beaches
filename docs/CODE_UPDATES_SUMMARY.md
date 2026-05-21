@@ -1,6 +1,39 @@
 # Code Updates Summary
 
+## Technical Debt Remediation (May 2026)
+
+Security hardening and correctness fixes applied to `coordinator.py`, `util.py`,
+`__init__.py`, `www/catalunya-beaches-card.js`, `strings.json`, `translations/*.json`,
+`config_flow.py`, and `sensor.py`.
+
+| # | Fix | File(s) |
+|---|-----|---------|
+| TD-1 | Removed `http://` entries from `_ASSET_BASE_URLS`; `_build_candidate_urls` now rewrites any API-supplied `http://` URL to `https://` before download | `coordinator.py` |
+| TD-2 | Replaced `response.read()` with `response.content.read(MAX + 1)` to cap memory allocation at the 5 MB limit during streaming | `coordinator.py` |
+| TD-3 | Added `options.error.unknown` string to `strings.json`, `en.json`, `ca.json` so the options flow error renders localised text instead of the raw key | translations |
+| TD-4 | Added `asyncio.Lock` (`_cache_lock`) wrapping `_async_cache_assets` to prevent concurrent coordinator refreshes writing the same file simultaneously | `coordinator.py` |
+| TD-5 | Added `asyncio.Semaphore(_CACHE_CONCURRENCY=4)` inside `_async_cache_assets` to bound simultaneous HTTP connections | `coordinator.py` |
+| TD-6 | Bumped `_CARD_VERSION` → `"2"` in `__init__.py` and `CARD_VERSION` → `"2.0.0"` in the JS card to force browser cache invalidation | `__init__.py`, `www/` |
+| TD-9 | Added optional `min_val`/`max_val` parameters to `parse_coordinate`; callers pass `(-90, 90)` for latitude and `(-180, 180)` for longitude | `util.py`, `config_flow.py`, `sensor.py` |
+| TD-10 | Added `_last_referenced_files` instance set; `_async_prune_cache` is skipped when the referenced file set is unchanged, eliminating redundant `iterdir()` I/O on every poll | `coordinator.py` |
+| TD-11 | Replaced `content_type.startswith("image/")` with an explicit `_ALLOWED_CONTENT_TYPES` frozenset (`jpeg`, `png`, `gif`, `webp`), blocking SVG and other executable image types | `coordinator.py` |
+
+---
+
 ## Changes Made Based on Beach Data Analysis
+
+### 0. Local Media Asset Caching (coordinator.py / sensor.py / docs)
+**Added token-free UI image/icon handling:**
+
+- Detected remote beach images/icons are cached locally under:
+  - `/config/www/ha-catalunya-beaches/<beach_id>/<filename>`
+- Sensor attributes and `entity_picture` expose:
+  - `/local/ha-catalunya-beaches/<beach_id>/<filename>`
+- Cache logic includes timeout, size limits, path/filename hardening, and reuse of already-downloaded files.
+
+**Rationale:**
+- Avoid non-rendering `/api/...token=` URLs in frontend cards.
+- Improve reliability for Bubble Card/Markdown/Picture-based dashboards.
 
 ### 1. Water Quality States (const.py)
 **Added missing water quality classifications found in real beach data:**

@@ -4,9 +4,9 @@
 
 ✅ **Status:** Integration is functional and meets requirements with minor improvements needed
 
-**Review Date:** November 11, 2025  
+**Review Date:** May 22, 2026 (updated; original November 11, 2025)  
 **Integration:** Catalunya Beach Monitoring (ha-catalunya-beaches)  
-**Version:** 1.0.0
+**Version:** 1.0.0 (integration) / 2.0.0 (Lovelace card)
 
 ---
 
@@ -130,8 +130,8 @@
    ```
    **Recommendation:** Implement using `recorder.purge_entities` service or document as manual step.
 
-3. **No Tests:** Integration lacks unit tests
-   **Recommendation:** Add pytest tests for critical paths (future enhancement).
+3. **No Tests:** Integration lacks unit tests  
+   **Recommendation:** Add pytest tests for critical paths (future enhancement). Asset-caching tests deferred pending HA pytest harness setup.
 
 ---
 
@@ -159,8 +159,13 @@
 ✅ **Proper Session Management:** Uses `async_get_clientsession()`  
 ✅ **Timeout Handling:** 30s timeout on API calls  
 ✅ **Rate Limiting:** Coordinator prevents excessive polling  
-✅ **Input Validation:** Beach ID and interval bounds checked  
+✅ **Input Validation:** Beach ID and interval bounds checked; coordinates validated to `(-90,90)` / `(-180,180)` ranges  
 ✅ **Error Propagation:** Proper exception hierarchy  
+✅ **HTTPS-only asset fetching:** `_ASSET_BASE_URLS` allowlist is HTTPS-only; `http://` API URLs are rewritten before download  
+✅ **Streaming body cap:** Asset downloads use `response.content.read(MAX+1)` to enforce the 5 MB limit  
+✅ **Content-type allowlist:** Only `image/jpeg`, `image/png`, `image/gif`, `image/webp` are accepted; SVG and other types are rejected  
+✅ **Path traversal guard:** `local_path.resolve().is_relative_to(static_root.resolve())` prevents writes outside the cache directory  
+✅ **Bounded concurrency:** `asyncio.Semaphore(4)` limits simultaneous asset HTTP connections; `asyncio.Lock` prevents concurrent cache writes  
 
 ---
 

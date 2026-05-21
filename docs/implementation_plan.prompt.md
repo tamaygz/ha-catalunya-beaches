@@ -32,7 +32,7 @@ Build a production-ready Home Assistant integration that enables users to monito
 
 2. **API rate limiting strategy** - No documented limits found, but implement exponential backoff? Option A: Aggressive (5min retry) / **Option B: Conservative (30min retry)** / Option C: User-configurable
 
-3. **Image handling** - Beach images available via `imagen_url` field. Option A: Download and cache locally / **Option B: Provide URLs as attributes only** / Option C: Optional thumbnail download
+3. **Image handling** - Beach images/icons are downloaded and cached locally in `/config/www/ha-catalunya-beaches/<beach_id>/` and exposed as token-free `/local/ha-catalunya-beaches/<beach_id>/<filename>` URLs for UI cards.
 
 4. **Historical data storage** - "Delete historical data" feature scope? Option A: Clear entity states only / **Option B: Remove from recorder/history DB** / Option C: Full entity recreation
 

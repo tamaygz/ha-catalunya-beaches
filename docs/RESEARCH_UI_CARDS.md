@@ -1,0 +1,213 @@
+# UI Research & Recommendations (Lovelace + Bubble Card)
+
+## Scope
+Research Home Assistant UI visualization options (built-in + Bubble Card), audit all available entities/attributes, and provide recommendations for dashboard design and integration improvements.
+
+## Bubble Card notes (Clooos/Bubble-Card)
+Bubble Card is a minimalist card collection that includes **pop-ups**, **sub-buttons**, **horizontal buttons stack**, and multiple card types including button, media player, cover, select, climate, calendar, separator, and layout helpers. Pop-ups are a core capability and can be triggered via navigation/actions or entity states.  
+Source: https://github.com/Clooos/Bubble-Card (README).
+
+## Integration UI data inventory
+### Sensors (always or selectable)
+- **Water Temperature**: state in °C; attributes: `test_estado`, `test_date` (latest water test).
+- **Air Temperature**: state in °C.
+- **Water Quality**: state string; attributes: `estado_info`, optional `destacar`, `last_update`.
+- **UV Index**: numeric; attributes: `uv_min`.
+- **Wave Height**: meters.
+- **Wind Speed**: km/h; attributes: `direction` (degrees).
+- **Sky Condition**: translated text.
+- **Jellyfish Status**: text; attributes: `danger_level`, `species[]`, `last_update`.
+- **Last Water Test Date**: timestamp.
+- **Description**: truncated state; attributes: `full_description`, `length`.
+- **Beach Info**: short status/alert text.
+- **Beach Name** (always present): state with rich attributes:
+  - `beach_id`, `municipality`, `coast`
+  - `images[]`, `image_count`, `primary_image`
+  - `icon_water_*`, `icon_jellyfish_*` (cached URL values)
+  - `entity_picture` is set to the primary beach image
+  - image/icon URLs are exposed as token-free `/local/ha-catalunya-beaches/<beach_id>/<filename>`
+
+- **Water Quality** and **Jellyfish Status** sensors are data-only (no coordinates) — they contribute to the beach_name summary but do not create extra map pins.
+  - The **Beach Name** sensor carries `beach_status` (summary string: "OK" or comma-separated warnings), `active_warnings` (list), `water_quality`, and `jellyfish` attributes.
+  - The Beach Name sensor icon is **dynamic**: `mdi:beach` (normal), `mdi:jellyfish` (high/very_high), `mdi:water-alert` (poor/very_poor water), `mdi:jellyfish-outline` (moderate), `mdi:calendar-remove` (out of season).
+
+### Binary sensors
+- **Lifeguard Present**
+- **Out of Season**
+- **Water Quality Good**
+- **Jellyfish Alert**
+- **Rain Risk High**
+
+### Button
+- **Refresh** button; attributes: `last_fetched`
+
+### Services
+- `refresh_all`, `refresh_beach` (action-oriented UI can expose these)
+
+## UI recommendations (built-in Lovelace cards)
+### 1) At-a-glance summary
+**Tile / Entities / Glance** card with:
+- Water temp, air temp, UV, wave height, wind speed
+- Water quality + jellyfish alert + lifeguard present
+
+### 2) Hero visual
+**Picture-Entity** using `sensor.<beach>_beach_name` (uses `entity_picture`):
+- Display primary beach image with the beach name
+- Combine with **Markdown** or **Entity** card for description/alerts
+
+### 3) Trends
+**History Graph**:
+- Water temp, air temp, wind speed, UV index
+**Statistics Graph** (if long-term trends are important)
+
+### 4) Risk & safety status
+- **Conditional** card or **Binary Sensor** tiles:
+  - Water quality good / jellyfish alert / rain risk / out of season
+- **Gauge** for UV Index with warning thresholds
+
+### 5) Details and explanation
+- **Markdown** card with:
+  - `description`, `beach_info`, water quality `estado_info`
+  - Helpful during out-of-season or rain disturbance events
+
+### 6) Map card (built-in)
+- The Home Assistant **Map** card shows entities with `latitude`/`longitude` attributes. Only the `sensor.<beach>_beach_name` sensor carries coordinates, giving **one pin per beach** (no duplicates).
+- Use `label_mode: state` to show the beach name, `label_mode: icon` to show the dynamic warning icon, or `label_mode: attribute` with `attribute: beach_status` to show a warning summary ("OK" or comma-separated alerts).
+- Omitting `label_mode` displays the beach photo (`entity_picture`) as the pin image. **Note:** `entity_picture` and `label_mode` are mutually exclusive in the built-in map card.
+- Optional: set `auto_fit: true` to fit the viewport to all beaches.
+
+## Bubble Card dashboard concepts
+### A) Beach overview bubble
+- **Bubble Card: Button**
+  - Main icon = beach
+  - Sub-buttons for quick metrics: water temp, air temp, UV, water quality
+  - Conditional sub-buttons for alerts: jellyfish, rain risk, out of season
+
+### B) Pop-up details
+- **Bubble Card: Pop-up**
+  - Triggered from the overview bubble
+  - Contents: picture-entity (beach image), detailed entities list, history graph, markdown description, jellyfish species list
+
+### C) Quick actions
+- **Bubble Card: Sub-buttons only** or **Horizontal buttons stack**
+  - Refresh button
+  - Service calls for `refresh_all` / `refresh_beach`
+
+## NSW Beachwatch-inspired layouts (adapted to our data)
+Based on the dashboard examples in https://github.com/PlanetCitizen1829381/ha-nsw-beachwatch, the following patterns map well to this integration (using Bubble Card where possible).
+
+### 1) Short advice card (Bubble Card + card-mod)
+**Goal:** A compact status banner that highlights current conditions.  
+**Adaptation:** Use `sensor.<beach>_water_quality` or `sensor.<beach>_beach_info` as the main state.  
+**Visual cues:** Color the icon background based on `binary_sensor.<beach>_water_quality_good`, `binary_sensor.<beach>_jellyfish_alert`, or `binary_sensor.<beach>_rain_risk_high`.  
+**Use available icons:** Show `icon_water_*` and `icon_jellyfish_*` URLs as inline images in a Markdown block beneath the Bubble Card.
+
+### 2) Extended advice card (Bubble Card + Entities)
+**Goal:** Large informative card with detailed context.  
+**Adaptation:** Vertical stack:
+- **Bubble Card button**: status + icon, use `sensor.<beach>_beach_info` or `sensor.<beach>_water_quality`.
+- **Entities card**: list `water_temperature`, `air_temperature`, `uv_index`, `wave_height`, `wind_speed`, `sky_condition`.
+- **Attributes section**: `test_date`, `test_estado`, `estado_info`, `jellyfish_status` and species list.
+
+### 3) Flat summary card (Entities)
+**Goal:** Compact list of essential metrics.  
+**Adaptation:** Entities card with:
+- `sensor.<beach>_water_temperature`, `sensor.<beach>_air_temperature`
+- `sensor.<beach>_uv_index`, `sensor.<beach>_wave_height`, `sensor.<beach>_wind_speed`
+- `sensor.<beach>_water_quality`, `binary_sensor.<beach>_jellyfish_alert`
+- Attributes: `test_date`, `estado_info`
+
+### 4) Map card (built-in)
+**Goal:** Multi-beach overview with one pin per beach; choose name, icon, or status summary.  
+**Adaptation:** Map card using the beach name sensor (single entity per beach with coordinates). Use `label_mode` to control what appears on each pin.  
+**Requires:** latitude/longitude attributes on `sensor.<beach>_beach_name`.
+
+Example — name labels:
+```yaml
+type: map
+title: Catalunya Beaches
+theme_mode: auto
+auto_fit: true
+entities:
+  - entity: sensor.platja_de_barcelona_beach_name
+    label_mode: state
+```
+
+Example — dynamic warning icon:
+```yaml
+type: map
+title: Catalunya Beaches – Warnings
+theme_mode: auto
+auto_fit: true
+entities:
+  - entity: sensor.platja_de_barcelona_beach_name
+    label_mode: icon
+```
+
+Example — status summary:
+```yaml
+type: map
+title: Catalunya Beaches – Status
+theme_mode: auto
+auto_fit: true
+entities:
+  - entity: sensor.platja_de_barcelona_beach_name
+    label_mode: attribute
+    attribute: beach_status
+```
+
+## Visualization ideas using existing data
+1. **Image-centric tile**: use `entity_picture` + beach name as a hero header.
+2. **Icon strip**: show official water/jellyfish icon URLs (`icon_water_*`, `icon_jellyfish_*`) in markdown or picture-elements.
+3. **Risk ribbon**: color-coded badges based on binary sensors (lifeguard, rain risk, out of season).
+4. **Trend section**: water temp + wind speed + UV history graph.
+5. **Data freshness**: surface `last_fetched` attribute from refresh button or coordinator.
+
+## Ready-to-use YAML examples
+Copy-pasteable Lovelace YAML files inspired by [ha-nsw-beachwatch](https://github.com/PlanetCitizen1829381/ha-nsw-beachwatch) and adapted to our entities/states.
+
+| File | Dependencies | Description |
+|------|-------------|-------------|
+| [`examples/map_card.yaml`](examples/map_card.yaml) | built-in | Map with 3 variants: name labels, dynamic warning icons, status summary |
+| [`examples/flat_summary_card.yaml`](examples/flat_summary_card.yaml) | built-in | Compact entities list — no custom cards required |
+| [`examples/short_advice_card.yaml`](examples/short_advice_card.yaml) | Bubble Card + card-mod | Color-coded compact banner using Jinja2 template |
+| [`examples/extended_card.yaml`](examples/extended_card.yaml) | Bubble Card + card-mod | Full card: beach image header, quality badge, conditions, safety, and attributes |
+
+**Color scheme used in Bubble Card examples:**
+
+| State | Color |
+|-------|-------|
+| Excellent / Good | Green `rgba(46,125,50, 0.25)` |
+| Acceptable | Amber `rgba(204,102,0, 0.25)` |
+| Poor / Very Poor | Red `rgba(198,40,40, 0.25)` |
+| Out of season | Grey `rgba(85,85,85, 0.25)` |
+| Unavailable / Unknown | Dark `rgba(51,51,51, 0.25)` |
+
+## Implemented integration improvements (UI-related)
+1. ✅ Translation step IDs aligned between flow and translations.
+2. ✅ Error keys aligned between flow and translations.
+3. ✅ Options flow treats `force_refresh`/`delete_history` as action-only.
+4. ✅ Device entry type uses `DeviceEntryType.SERVICE`.
+5. ✅ Coordinates exposed on `beach_name` sensor only (single pin per beach); `water_quality` and `jellyfish_status` no longer carry coordinates to avoid duplicate map pins.
+6. ✅ Beach name sensor includes summary attributes: `beach_status`, `active_warnings`, `water_quality`, `jellyfish`.
+7. ✅ Beach name sensor icon is dynamic: changes based on worst active warning (jellyfish → `mdi:jellyfish`, poor water → `mdi:water-alert`, out of season → `mdi:calendar-remove`, default → `mdi:beach`).
+8. ✅ Water quality/jellyfish states normalized for translation keys.
+9. ✅ Wind speed unit aligned to km/h.
+10. ✅ Detected image/icon assets cached locally and exposed with token-free `/local/...` URLs.
+11. ✅ Ready-to-use YAML examples created in `docs/examples/` (map card, flat summary, short advice, extended card).
+
+## Suggested "starter" UI layouts
+### Minimal
+- Picture-entity (beach image + name)
+- Entities card (temps, UV, water quality, lifeguard)
+
+### Safety-focused
+- Binary sensor tiles (lifeguard, water quality good, jellyfish alert, rain risk)
+- Gauge (UV)
+- Entities (water temp, wave height, wind speed)
+
+### Detailed / dashboard
+- Picture-entity header
+- Entities + history graph
+- Markdown (description + beach info)
+- Bubble Card pop-up for detailed attributes

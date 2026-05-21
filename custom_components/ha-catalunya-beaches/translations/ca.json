@@ -1,26 +1,26 @@
 {
     "config": {
         "step": {
-            "language": {
+            "user": {
                 "title": "Selecció d'idioma",
                 "description": "Seleccioneu l'idioma per a la informació de la platja",
                 "data": {
                     "language": "Idioma"
                 }
             },
-            "beach": {
+            "select_beach": {
                 "title": "Selecció de platja",
                 "description": "Seleccioneu una platja per monitoritzar",
                 "data": {
                     "beach_id": "Platja"
                 }
             },
-            "entities": {
+            "configure_entities": {
                 "title": "Configuració d'entitats",
-                "description": "Seleccioneu quines entitats voleu habilitar per a aquesta platja",
+                "description": "Configureu l'interval d'actualització i les entitats habilitades per a {beach_name}",
                 "data": {
-                    "enabled_entities": "Entitats habilitades",
-                    "update_interval": "Interval d'actualització (segons)"
+                    "update_interval": "Interval d'actualització (segons)",
+                    "enabled_entities": "Entitats habilitades"
                 }
             }
         },
@@ -35,16 +35,26 @@
     },
     "options": {
         "step": {
-            "init": {
+            "configure": {
                 "title": "Opcions de platja",
                 "description": "Configureu l'interval d'actualització i les entitats habilitades",
                 "data": {
                     "update_interval": "Interval d'actualització (segons)",
                     "enabled_entities": "Entitats habilitades",
                     "force_refresh": "Forçar actualització de dades ara",
-                    "confirm_delete_history": "Eliminar totes les dades històriques"
+                    "delete_history": "Eliminar totes les dades històriques"
+                }
+            },
+            "confirm_delete": {
+                "title": "Confirmar eliminació",
+                "description": "Esteu segur que voleu eliminar totes les dades històriques per a {beach_name}?",
+                "data": {
+                    "confirm": "Confirmar eliminació"
                 }
             }
+        },
+        "error": {
+            "unknown": "S'ha produït un error inesperat"
         }
     },
     "entity": {
@@ -63,6 +73,7 @@
                     "acceptable": "Acceptable",
                     "poor": "Dolenta",
                     "very_poor": "Molt dolenta",
+                    "out_of_season": "Fora de temporada",
                     "unknown": "Desconeguda"
                 }
             },
@@ -95,6 +106,7 @@
                     "moderate": "Moderat",
                     "high": "Alt",
                     "very_high": "Molt alt",
+                    "out_of_season": "Fora de temporada",
                     "unknown": "Desconegut"
                 }
             },

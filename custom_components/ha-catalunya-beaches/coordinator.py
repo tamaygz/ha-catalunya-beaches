@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
+import re
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
-from zoneinfo import ZoneInfo
+from pathlib import Path
+from typing import TYPE_CHECKING
+from urllib.parse import urljoin, urlparse
 
+import aiohttp
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -27,6 +32,18 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     """Class to manage fetching beach data from the API."""
 
     config_entry: CatalunyaBeachesConfigEntry
+    _STATIC_URL_PREFIX = "/local/" + DOMAIN
+    _STATIC_DIR_NAME = DOMAIN
+    _HTTP_OK_STATUS = 200
+    _ASSET_REQUEST_TIMEOUT_SECONDS = 15
+    _MAX_ASSET_BYTES = 5 * 1024 * 1024
+    _CACHE_CONCURRENCY = 4
+    _ALLOWED_CONTENT_TYPES = frozenset({"image/jpeg", "image/png", "image/gif", "image/webp"})
+    _ASSET_BASE_URLS = (
+        "https://aca-web.gencat.cat/images/platges/",
+        "https://aplicacions.aca.gencat.cat/platges/AppJava/images/platges/",
+        "https://aplicacions.aca.gencat.cat/platges/AppJava/images/iconos/",
+    )
 
     def __init__(
         self,
@@ -49,6 +66,8 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
             name=f"{DOMAIN}_{self.beach_id}",
             update_interval=timedelta(seconds=update_interval),
         )
+        self._cache_lock = asyncio.Lock()
+        self._last_referenced_files: set[str] = set()
 
     async def _async_update_data(self) -> BeachInfo:
         """Fetch beach data from API.
@@ -62,6 +81,8 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
         try:
             client = self.config_entry.runtime_data.client
             beach_info = await client.async_get_beach_detail(self.beach_id)
+            async with self._cache_lock:
+                await self._async_cache_assets(beach_info)
 
             LOGGER.debug(
                 "Successfully updated data for beach %s (%s)",
@@ -114,6 +135,230 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     async def async_force_refresh(self) -> None:
         """Force an immediate refresh of beach data."""
         await self.async_request_refresh()
+
+    async def _async_cache_assets(self, beach_info: BeachInfo) -> None:
+        """Cache remote beach assets locally and replace URLs with local static URLs."""
+        sem = asyncio.Semaphore(self._CACHE_CONCURRENCY)
+
+        async def _bounded(asset: str) -> str:
+            async with sem:
+                return await self._async_cache_single_asset(asset)
+
+        if beach_info.imagenes:
+            beach_info.imagenes = list(
+                await asyncio.gather(*(_bounded(a) for a in beach_info.imagenes))
+            )
+
+        if beach_info.iconos:
+            icon_keys = list(beach_info.iconos.keys())
+            icon_values = list(beach_info.iconos.values())
+            cached_icons = list(
+                await asyncio.gather(*(_bounded(a) for a in icon_values))
+            )
+            beach_info.iconos = dict(zip(icon_keys, cached_icons, strict=True))
+
+        if beach_info.calidad_playa and beach_info.calidad_playa.icono:
+            beach_info.calidad_playa.icono = await self._async_cache_single_asset(
+                beach_info.calidad_playa.icono
+            )
+
+        if beach_info.medusas and beach_info.medusas.icono:
+            beach_info.medusas.icono = await self._async_cache_single_asset(
+                beach_info.medusas.icono
+            )
+
+        # Prune cached files that are no longer referenced by the current API response
+        referenced_files = self._collect_local_filenames(beach_info)
+        if referenced_files != self._last_referenced_files:
+            self._last_referenced_files = referenced_files
+            await self._async_prune_cache(referenced_files)
+
+    def _collect_local_filenames(self, beach_info: BeachInfo) -> set[str]:
+        """Collect filenames of all locally cached assets referenced by beach_info."""
+        filenames: set[str] = set()
+        prefix = f"{self._STATIC_URL_PREFIX}/{self.beach_id}/"
+
+        def _add_if_local(url: str | None) -> None:
+            if url and url.startswith(prefix):
+                filenames.add(url[len(prefix):])
+
+        if beach_info.imagenes:
+            for url in beach_info.imagenes:
+                _add_if_local(url)
+        if beach_info.iconos:
+            for url in beach_info.iconos.values():
+                _add_if_local(url)
+        if beach_info.calidad_playa and beach_info.calidad_playa.icono:
+            _add_if_local(beach_info.calidad_playa.icono)
+        if beach_info.medusas and beach_info.medusas.icono:
+            _add_if_local(beach_info.medusas.icono)
+
+        return filenames
+
+    async def _async_prune_cache(self, referenced_filenames: set[str]) -> None:
+        """Remove cached files not referenced by the current API response."""
+        static_root = (
+            Path(self.hass.config.path("www"))
+            / self._STATIC_DIR_NAME
+            / str(self.beach_id)
+        )
+
+        def _prune() -> None:
+            if not static_root.exists():
+                return
+            try:
+                for cached_file in static_root.iterdir():
+                    if (
+                        cached_file.is_file()
+                        and cached_file.name not in referenced_filenames
+                    ):
+                        try:
+                            cached_file.unlink()
+                            LOGGER.debug(
+                                "Pruned unreferenced cached asset: %s", cached_file
+                            )
+                        except OSError as exc:
+                            LOGGER.debug(
+                                "Failed to prune cached asset %s: %s",
+                                cached_file,
+                                exc,
+                            )
+            except OSError as exc:
+                LOGGER.debug(
+                    "Failed to scan cache directory %s: %s", static_root, exc
+                )
+
+        await asyncio.to_thread(_prune)
+
+    async def _async_cache_single_asset(self, asset_reference: str) -> str:
+        """Cache one remote asset locally and return a static `/local` URL."""
+        if not asset_reference:
+            return asset_reference
+        if asset_reference.startswith(self._STATIC_URL_PREFIX):
+            return asset_reference
+
+        candidate_urls = self._build_candidate_urls(asset_reference)
+        for candidate_url in candidate_urls:
+            filename = Path(urlparse(candidate_url).path).name
+            if not filename:
+                continue
+            filename = re.sub(r"[^A-Za-z0-9_.()-]", "_", filename)
+            if (
+                not filename
+                or filename in {".", ".."}
+                or ".." in filename
+                or filename.startswith("-")
+            ):
+                continue
+
+            static_root = (
+                Path(self.hass.config.path("www"))
+                / self._STATIC_DIR_NAME
+                / str(self.beach_id)
+            )
+            local_path = static_root / filename
+            if not local_path.resolve(strict=False).is_relative_to(
+                static_root.resolve(strict=False)
+            ):
+                continue
+            local_url = f"{self._STATIC_URL_PREFIX}/{self.beach_id}/{filename}"
+
+            if local_path.exists():
+                return local_url
+
+            session = async_get_clientsession(self.hass)
+            try:
+                async with session.get(
+                    candidate_url,
+                    timeout=aiohttp.ClientTimeout(total=self._ASSET_REQUEST_TIMEOUT_SECONDS),
+                ) as response:
+                    if response.status != self._HTTP_OK_STATUS:
+                        continue
+                    content_length = response.headers.get("Content-Length")
+                    if content_length:
+                        try:
+                            content_length_int = int(content_length)
+                        except ValueError:
+                            content_length_int = None
+                        if (
+                            content_length_int is not None
+                            and content_length_int > self._MAX_ASSET_BYTES
+                        ):
+                            LOGGER.debug(
+                                "Skipping oversized asset from %s (%s bytes)",
+                                candidate_url,
+                                content_length_int,
+                            )
+                            continue
+                    content_type = response.headers.get("Content-Type", "").split(";")[0].strip()
+                    if content_type not in self._ALLOWED_CONTENT_TYPES:
+                        LOGGER.debug(
+                            "Skipping non-image asset response from %s (%s)",
+                            candidate_url,
+                            content_type,
+                        )
+                        continue
+                    content = await response.content.read(self._MAX_ASSET_BYTES + 1)
+            except (
+                aiohttp.ClientError,
+                OSError,
+                TimeoutError,
+            ) as exception:  # pragma: no cover - defensive network handling
+                LOGGER.debug(
+                    "Failed to cache asset from %s: %s",
+                    candidate_url,
+                    exception,
+                )
+                continue
+
+            if not content:
+                continue
+            if len(content) > self._MAX_ASSET_BYTES:
+                LOGGER.debug(
+                    "Skipping oversized downloaded asset from %s (%s bytes)",
+                    candidate_url,
+                    len(content),
+                )
+                continue
+
+            try:
+                await asyncio.to_thread(
+                    local_path.parent.mkdir,
+                    parents=True,
+                    exist_ok=True,
+                )
+                await asyncio.to_thread(local_path.write_bytes, content)
+            except OSError as exception:  # pragma: no cover - fs protection
+                LOGGER.debug(
+                    "Failed to write cached asset %s: %s",
+                    local_path,
+                    exception,
+                )
+                continue
+
+            return local_url
+
+        return asset_reference
+
+    def _build_candidate_urls(self, asset_reference: str) -> list[str]:
+        """Build candidate absolute URLs for remote assets."""
+        if asset_reference.startswith(("http://", "https://")):
+            # Rewrite http:// to https:// to prevent MITM attacks
+            secure_ref = (
+                "https://" + asset_reference[len("http://"):]
+                if asset_reference.startswith("http://")
+                else asset_reference
+            )
+            # Only allow URLs from the known allowlist to prevent SSRF
+            if any(secure_ref.startswith(base) for base in self._ASSET_BASE_URLS):
+                return [secure_ref]
+            LOGGER.debug(
+                "Ignoring absolute URL not in allowed base URLs: %s", asset_reference
+            )
+            return []
+
+        sanitized = asset_reference.lstrip("/")
+        return [urljoin(base_url, sanitized) for base_url in self._ASSET_BASE_URLS]
 
     def update_interval_seconds(self, new_interval: int) -> None:
         """Update the polling interval.

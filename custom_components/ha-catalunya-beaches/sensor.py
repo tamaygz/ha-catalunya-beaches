@@ -11,10 +11,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature, UnitOfLength, UnitOfSpeed
+from homeassistant.const import UnitOfLength, UnitOfSpeed, UnitOfTemperature
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    CONF_BEACH_LATITUDE,
+    CONF_BEACH_LONGITUDE,
     CONF_ENABLED_ENTITIES,
     ENTITY_AIR_TEMP,
     ENTITY_BEACH_INFO,
@@ -28,11 +30,14 @@ from .const import (
     ENTITY_WATER_TEMP,
     ENTITY_WAVE_HEIGHT,
     ENTITY_WIND_SPEED,
+    JELLYFISH_STATUS,
     LOGGER,
     SKY_CONDITIONS,
     WATER_QUALITY_STATUS,
 )
 from .entity import CatalunyaBeachEntity
+from .util import parse_coordinate
+
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -61,6 +66,17 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ENTITY_WATER_QUALITY: SensorEntityDescription(
         key=ENTITY_WATER_QUALITY,
         name="Water Quality",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "excellent",
+            "good",
+            "acceptable",
+            "poor",
+            "very_poor",
+            "out_of_season",
+            "unknown",
+        ],
+        translation_key=ENTITY_WATER_QUALITY,
         icon="mdi:water-check",
     ),
     ENTITY_UV_INDEX: SensorEntityDescription(
@@ -80,7 +96,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=ENTITY_WIND_SPEED,
         name="Wind Speed",
         device_class=SensorDeviceClass.WIND_SPEED,
-        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:weather-windy",
     ),
@@ -92,6 +108,17 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ENTITY_JELLYFISH_STATUS: SensorEntityDescription(
         key=ENTITY_JELLYFISH_STATUS,
         name="Jellyfish Status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "none",
+            "low",
+            "moderate",
+            "high",
+            "very_high",
+            "out_of_season",
+            "unknown",
+        ],
+        translation_key=ENTITY_JELLYFISH_STATUS,
         icon="mdi:jellyfish",
     ),
     ENTITY_LAST_TEST_DATE: SensorEntityDescription(
@@ -173,6 +200,21 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
         self.entity_description = entity_description
         self._attr_unique_id = f"{beach_id}_{entity_description.key}"
 
+    def _resolve_coordinates(
+        self, beach_info
+    ) -> tuple[float, float] | tuple[None, None]:
+        """Return (latitude, longitude) from beach data or config entry, or (None, None)."""
+        latitude = None
+        longitude = None
+        if beach_info.coordenadas:
+            latitude, longitude = beach_info.coordenadas
+        else:
+            latitude = self.coordinator.config_entry.data.get(CONF_BEACH_LATITUDE)
+            longitude = self.coordinator.config_entry.data.get(CONF_BEACH_LONGITUDE)
+        latitude = parse_coordinate(latitude, min_val=-90, max_val=90)
+        longitude = parse_coordinate(longitude, min_val=-180, max_val=180)
+        return (latitude, longitude) if latitude is not None and longitude is not None else (None, None)
+
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
@@ -201,7 +243,7 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
             elif key == ENTITY_WATER_QUALITY:
                 if beach_info.calidad_playa:
                     estado = beach_info.calidad_playa.estado
-                    return WATER_QUALITY_STATUS.get(estado, estado)
+                    return WATER_QUALITY_STATUS.get(estado, "unknown")
                 return None
 
             elif key == ENTITY_UV_INDEX:
@@ -238,7 +280,8 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
 
             elif key == ENTITY_JELLYFISH_STATUS:
                 if beach_info.medusas:
-                    return beach_info.medusas.peligrosidad or "Unknown"
+                    status = beach_info.medusas.peligrosidad or "unknown"
+                    return JELLYFISH_STATUS.get(status, "unknown")
                 return None
 
             elif key == ENTITY_LAST_TEST_DATE:
@@ -335,6 +378,43 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                 attributes["municipality"] = beach_info.municipio
                 attributes["coast"] = beach_info.costa
 
+                latitude, longitude = self._resolve_coordinates(beach_info)
+                if latitude is not None:
+                    attributes["latitude"] = latitude
+                    attributes["longitude"] = longitude
+
+                # Summarize current conditions for map usage
+                warnings: list[str] = []
+                wq = None
+                jf = None
+
+                if beach_info.calidad_playa:
+                    wq = WATER_QUALITY_STATUS.get(
+                        beach_info.calidad_playa.estado
+                    )
+                    attributes["water_quality"] = wq
+                    if wq in ("poor", "very_poor"):
+                        warnings.append("Water quality: " + wq)
+
+                if beach_info.medusas:
+                    jf = JELLYFISH_STATUS.get(
+                        beach_info.medusas.peligrosidad or "unknown",
+                        "unknown",
+                    )
+                    attributes["jellyfish"] = jf
+                    if jf in ("high", "very_high"):
+                        warnings.append("Jellyfish: " + jf)
+                    elif jf == "moderate":
+                        warnings.append("Jellyfish: moderate")
+
+                if beach_info.fora_temporada:
+                    warnings.append("Out of season")
+
+                attributes["active_warnings"] = warnings
+                attributes["beach_status"] = (
+                    ", ".join(warnings) if warnings else "OK"
+                )
+
                 # Add images and icons
                 if beach_info.imagenes:
                     attributes["images"] = beach_info.imagenes
@@ -390,6 +470,47 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
         beach_info = self.coordinator.data
         if beach_info.imagenes and len(beach_info.imagenes) > 0:
             # Return the first (primary) image URL
-            return f"https://aca-web.gencat.cat/images/platges/{beach_info.imagenes[0]}"
+            image_url = beach_info.imagenes[0]
+            if image_url.startswith(("http://", "https://", "/")):
+                return image_url
+            return f"https://aca-web.gencat.cat/images/platges/{image_url}"
 
         return None
+
+    @property
+    def icon(self) -> str | None:
+        """Return a dynamic icon for the beach name sensor based on warnings."""
+        if self.entity_description.key != ENTITY_BEACH_NAME:
+            return self.entity_description.icon
+
+        if not self.coordinator.data:
+            return "mdi:beach"
+
+        beach_info = self.coordinator.data
+        result = "mdi:beach"
+
+        # Priority: jellyfish high/very_high > poor water > jellyfish moderate
+        # > out of season > default beach
+        jf = None
+        if beach_info.medusas:
+            jf = JELLYFISH_STATUS.get(
+                beach_info.medusas.peligrosidad or "unknown",
+                "unknown",
+            )
+
+        wq = None
+        if beach_info.calidad_playa:
+            wq = WATER_QUALITY_STATUS.get(
+                beach_info.calidad_playa.estado
+            )
+
+        if jf in ("high", "very_high"):
+            result = "mdi:jellyfish"
+        elif wq in ("poor", "very_poor"):
+            result = "mdi:water-alert"
+        elif jf == "moderate":
+            result = "mdi:jellyfish-outline"
+        elif beach_info.fora_temporada:
+            result = "mdi:calendar-remove"
+
+        return result
