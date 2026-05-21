@@ -48,16 +48,7 @@ from .const import (
     MIN_UPDATE_INTERVAL,
 )
 from .data import BeachListItem
-
-
-def _parse_coordinate(value: str | None) -> float | None:
-    """Parse a coordinate string into a float."""
-    if value is None:
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
+from .util import parse_coordinate
 
 
 class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -164,10 +155,10 @@ class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Configure which entities to enable."""
         if user_input is not None:
-            latitude = _parse_coordinate(
+            latitude = parse_coordinate(
                 self._selected_beach.latitud if self._selected_beach else None
             )
-            longitude = _parse_coordinate(
+            longitude = parse_coordinate(
                 self._selected_beach.longitud if self._selected_beach else None
             )
 

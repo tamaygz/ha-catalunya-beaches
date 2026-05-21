@@ -35,16 +35,7 @@ from .const import (
     WATER_QUALITY_STATUS,
 )
 from .entity import CatalunyaBeachEntity
-
-
-def _parse_coordinate(value: float | str | None) -> float | None:
-    """Parse a coordinate into a float value."""
-    if value is None:
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
+from .util import parse_coordinate
 
 
 if TYPE_CHECKING:
@@ -360,8 +351,8 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                         CONF_BEACH_LONGITUDE
                     )
 
-                latitude = _parse_coordinate(latitude)
-                longitude = _parse_coordinate(longitude)
+                latitude = parse_coordinate(latitude)
+                longitude = parse_coordinate(longitude)
 
                 if latitude is not None and longitude is not None:
                     attributes["latitude"] = latitude
