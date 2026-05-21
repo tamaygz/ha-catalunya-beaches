@@ -36,6 +36,7 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     _STATIC_DIR_NAME = DOMAIN
     _HTTP_OK_STATUS = 200
     _ASSET_REQUEST_TIMEOUT_SECONDS = 15
+    _MAX_ASSET_BYTES = 5 * 1024 * 1024
     _ASSET_BASE_URLS = (
         "https://aca-web.gencat.cat/images/platges/",
         "http://aca-web.gencat.cat/images/platges/",
@@ -174,15 +175,19 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
             if not filename:
                 continue
             filename = re.sub(r"[^A-Za-z0-9_.()-]", "_", filename)
-            if not filename or filename in {".", ".."}:
+            if not filename or filename in {".", ".."} or ".." in filename:
                 continue
 
-            local_path = (
+            static_root = (
                 Path(self.hass.config.path("www"))
                 / self._STATIC_DIR_NAME
                 / str(self.beach_id)
-                / filename
             )
+            local_path = static_root / filename
+            if static_root.resolve(strict=False) not in local_path.resolve(
+                strict=False
+            ).parents:
+                continue
             local_url = f"{self._STATIC_URL_PREFIX}/{self.beach_id}/{filename}"
 
             if local_path.exists():
@@ -195,6 +200,18 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
                     timeout=aiohttp.ClientTimeout(total=self._ASSET_REQUEST_TIMEOUT_SECONDS),
                 ) as response:
                     if response.status != self._HTTP_OK_STATUS:
+                        continue
+                    content_length = response.headers.get("Content-Length")
+                    if (
+                        content_length
+                        and content_length.isdigit()
+                        and int(content_length) > self._MAX_ASSET_BYTES
+                    ):
+                        LOGGER.debug(
+                            "Skipping oversized asset from %s (%s bytes)",
+                            candidate_url,
+                            content_length,
+                        )
                         continue
                     content_type = response.headers.get("Content-Type", "")
                     if not content_type.startswith("image/"):
@@ -218,6 +235,13 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
                 continue
 
             if not content:
+                continue
+            if len(content) > self._MAX_ASSET_BYTES:
+                LOGGER.debug(
+                    "Skipping oversized downloaded asset from %s (%s bytes)",
+                    candidate_url,
+                    len(content),
+                )
                 continue
 
             try:
