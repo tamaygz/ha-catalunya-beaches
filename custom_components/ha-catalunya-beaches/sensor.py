@@ -178,6 +178,21 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
         self.entity_description = entity_description
         self._attr_unique_id = f"{beach_id}_{entity_description.key}"
 
+    def _resolve_coordinates(
+        self, beach_info
+    ) -> tuple[float, float] | tuple[None, None]:
+        """Return (latitude, longitude) from beach data or config entry, or (None, None)."""
+        latitude = None
+        longitude = None
+        if beach_info.coordenadas:
+            latitude, longitude = beach_info.coordenadas
+        else:
+            latitude = self.coordinator.config_entry.data.get(CONF_BEACH_LATITUDE)
+            longitude = self.coordinator.config_entry.data.get(CONF_BEACH_LONGITUDE)
+        latitude = parse_coordinate(latitude)
+        longitude = parse_coordinate(longitude)
+        return (latitude, longitude) if latitude is not None and longitude is not None else (None, None)
+
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
@@ -301,6 +316,10 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                         attributes["last_update"] = (
                             beach_info.calidad_playa.timestamp.isoformat()
                         )
+                latitude, longitude = self._resolve_coordinates(beach_info)
+                if latitude is not None:
+                    attributes["latitude"] = latitude
+                    attributes["longitude"] = longitude
 
             elif key == ENTITY_JELLYFISH_STATUS:
                 if beach_info.medusas:
@@ -313,6 +332,10 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                         attributes["last_update"] = (
                             beach_info.medusas.fecha_modificacion.isoformat()
                         )
+                latitude, longitude = self._resolve_coordinates(beach_info)
+                if latitude is not None:
+                    attributes["latitude"] = latitude
+                    attributes["longitude"] = longitude
 
             elif key == ENTITY_WATER_TEMP and beach_info.ultimos_analisis:
                 latest = beach_info.ultimos_analisis[0]
@@ -341,22 +364,8 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                 attributes["municipality"] = beach_info.municipio
                 attributes["coast"] = beach_info.costa
 
-                latitude = None
-                longitude = None
-                if beach_info.coordenadas:
-                    latitude, longitude = beach_info.coordenadas
-                else:
-                    latitude = self.coordinator.config_entry.data.get(
-                        CONF_BEACH_LATITUDE
-                    )
-                    longitude = self.coordinator.config_entry.data.get(
-                        CONF_BEACH_LONGITUDE
-                    )
-
-                latitude = parse_coordinate(latitude)
-                longitude = parse_coordinate(longitude)
-
-                if latitude is not None and longitude is not None:
+                latitude, longitude = self._resolve_coordinates(beach_info)
+                if latitude is not None:
                     attributes["latitude"] = latitude
                     attributes["longitude"] = longitude
 
