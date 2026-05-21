@@ -296,6 +296,7 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Configure beach options."""
         errors: dict[str, str] = {}
+        self._pending_options = None
 
         current_interval = self.config_entry.options.get(
             CONF_UPDATE_INTERVAL,
@@ -423,12 +424,14 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Confirm deletion of historical data."""
-        if self._pending_options is None:
-            if user_input is None:
-                return await self.async_step_configure()
-            options = self.config_entry.options
-        else:
-            options = self._pending_options
+        if self._pending_options is None and user_input is None:
+            return await self.async_step_configure()
+
+        options = (
+            self._pending_options
+            if self._pending_options is not None
+            else self.config_entry.options
+        )
         if user_input is not None:
             if user_input.get("confirm"):
                 # Delete historical data
