@@ -423,6 +423,9 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Confirm deletion of historical data."""
+        if self._pending_options is None and user_input is None:
+            return await self.async_step_configure()
+
         options = self._pending_options or self.config_entry.options
         if user_input is not None:
             if user_input.get("confirm"):
