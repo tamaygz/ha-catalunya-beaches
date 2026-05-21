@@ -31,7 +31,7 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     """Class to manage fetching beach data from the API."""
 
     config_entry: CatalunyaBeachesConfigEntry
-    _STATIC_URL_PREFIX = f"/local/{DOMAIN}"
+    _STATIC_URL_PREFIX = "/local/" + DOMAIN
     _STATIC_DIR_NAME = DOMAIN
     _HTTP_OK_STATUS = 200
     _ASSET_BASE_URLS = (
@@ -142,7 +142,7 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
         cached_icons = await asyncio.gather(
             *(self._async_cache_single_asset(asset) for asset in icon_values)
         )
-        beach_info.iconos = dict(zip(icon_keys, cached_icons, strict=False))
+        beach_info.iconos = dict(zip(icon_keys, cached_icons, strict=True))
 
         if beach_info.calidad_playa and beach_info.calidad_playa.icono:
             beach_info.calidad_playa.icono = await self._async_cache_single_asset(
