@@ -107,6 +107,73 @@
     return map[state.toLowerCase()] ?? state;
   }
 
+  /** Escape HTML special characters to prevent XSS when interpolating into innerHTML. */
+  function esc(s) {
+    if (s == null) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  /**
+   * Validate an image URL for safe use in a CSS background-image property.
+   * Accepts paths under /local/, the integration static path, and https://.
+   */
+  function safeCssUrl(url) {
+    if (!url) return null;
+    if (/^\/local\/|\/ha-catalunya-beaches-frontend\/|^https:\/\//.test(url)) {
+      return url;
+    }
+    return null;
+  }
+
+  // UI label translations keyed by ISO 639-1 language code; falls back to "en".
+  const LOCALES = {
+    en: {
+      water_quality: "Water Quality",
+      conditions: "Conditions",
+      safety: "Safety",
+      details: "Details",
+      quality_info: "Quality info",
+      jellyfish_species: "Jellyfish species",
+      quality_updated: "Quality updated",
+      water: "Water",
+      air: "Air",
+      uv: "UV",
+      waves: "Waves",
+      wind: "Wind",
+      sky: "Sky",
+      lifeguard: "Lifeguard",
+      water_ok: "Water OK",
+      jellyfish: "Jellyfish",
+      rain_risk: "Rain risk high",
+      off_season: "Off season",
+    },
+    ca: {
+      water_quality: "Qualitat de l\u2019aigua",
+      conditions: "Condicions",
+      safety: "Seguretat",
+      details: "Detalls",
+      quality_info: "Info qualitat",
+      jellyfish_species: "Esp\u00e8cies meduses",
+      quality_updated: "Actualitzat",
+      water: "Aigua",
+      air: "Aire",
+      uv: "UV",
+      waves: "Ones",
+      wind: "Vent",
+      sky: "Cel",
+      lifeguard: "Socorrista",
+      water_ok: "Aigua OK",
+      jellyfish: "Meduses",
+      rain_risk: "Risc de pluja",
+      off_season: "Fora de temporada",
+    },
+  };
+
   // ─────────────────────────────────────────────────────────────────────────────
 
   class CatalunyaBeachesCard extends HTMLElement {
@@ -132,6 +199,7 @@
         compact: false,
         ...config,
       };
+      this._lastFingerprint = null; // force re-render on config change
       if (this._hass) this._render();
     }
 
@@ -142,6 +210,17 @@
 
     connectedCallback() {
       if (this._hass && this._config) this._render();
+    }
+
+    disconnectedCallback() {
+      this._card = null;
+      this._lastFingerprint = null;
+    }
+
+    /** Resolve the active locale string map from HA's UI language setting. */
+    _locale() {
+      const lang = this._hass?.locale?.language?.slice(0, 2) ?? "en";
+      return LOCALES[lang] ?? LOCALES.en;
     }
 
     // ── Card meta ────────────────────────────────────────────────────────────
@@ -242,8 +321,10 @@
     // ── Rendering ────────────────────────────────────────────────────────────
 
     _render() {
+      if (!this.isConnected) return;
       const cfg = this._config;
       const compact = cfg.compact;
+      const t = this._locale();
 
       // Entity IDs
       const nameId = this._sid("beach_name");
@@ -261,30 +342,33 @@
       const rainRiskId = this._bid("rain_risk_high");
       const offSeasonId = this._bid("out_of_season");
 
-      // Values
-      const beachDisplay =
-        this._attr(nameId, "friendly_name") ??
+      // Raw values (unescaped)
+      // Use native_value (state) of beach_name sensor as the display name — it IS the beach name.
+      const beachDisplayRaw =
+        this._state(nameId) ??
         this._slug.replace(/_/g, " ");
 
-      const imageUrl =
+      // Validate image URL before use in CSS; rejects anything outside known safe prefixes.
+      const imageUrl = safeCssUrl(
         this._attr(nameId, "entity_picture") ??
-        this._attr(nameId, "primary_image") ??
-        null;
+        this._attr(nameId, "primary_image")
+      );
 
       const qualityRaw = this._state(qualityId);
       const qualityDisplay = label(QUALITY_LABELS, qualityRaw);
       const qColor = qualityColor(qualityRaw);
-      const qualityInfo = this._attr(qualityId, "estado_info") ?? "";
-      const qualityUpdated = this._attr(qualityId, "last_update") ?? "";
+      // estado_info is an API-provided Catalan/Spanish string; displayed as-is (locale-native).
+      const qualityInfoRaw = this._attr(qualityId, "estado_info") ?? "";
+      const qualityUpdatedRaw = this._attr(qualityId, "last_update") ?? "";
 
-      const waterTemp = this._fmt(this._state(waterTempId), "°C");
-      const airTemp = this._fmt(this._state(airTempId), "°C");
+      const waterTempRaw = this._fmt(this._state(waterTempId), "°C");
+      const airTempRaw = this._fmt(this._state(airTempId), "°C");
       const uvRaw = this._state(uvId);
-      const uv = this._fmt(uvRaw);
+      const uvFmt = this._fmt(uvRaw);
       const uvCss = uvColor(uvRaw);
-      const waves = this._fmt(this._state(waveId), "m");
-      const wind = this._fmt(this._state(windId), "km/h");
-      const sky = this._fmt(this._state(skyId));
+      const wavesRaw = this._fmt(this._state(waveId), "m");
+      const windRaw = this._fmt(this._state(windId), "km/h");
+      const skyRaw = this._fmt(this._state(skyId));
 
       const lifeguard = this._state(lifeguardId);
       const wqGood = this._state(wqGoodId);
@@ -293,8 +377,31 @@
       const offSeason = this._state(offSeasonId);
       const jellyfishRaw = this._state(jellyfishId);
       const jellyfishDisplay = label(JELLYFISH_LABELS, jellyfishRaw);
-      const jellyfishSpecies =
+      const jellyfishSpeciesRaw =
         (this._attr(jellyfishId, "species") ?? []).join(", ") || null;
+
+      // Render guard — skip DOM update when nothing visible has changed.
+      const fingerprint = [
+        qualityRaw, jellyfishRaw, waterTempRaw, airTempRaw, uvRaw,
+        wavesRaw, windRaw, skyRaw, lifeguard, wqGood, jellyfishAlert,
+        rainRisk, offSeason, imageUrl, beachDisplayRaw, qualityInfoRaw,
+        qualityUpdatedRaw, jellyfishSpeciesRaw,
+        compact, cfg.show_image, cfg.show_conditions, cfg.show_safety, cfg.show_details,
+      ].join("|");
+      if (fingerprint === this._lastFingerprint) return;
+      this._lastFingerprint = fingerprint;
+
+      // HTML-escape all external/user-influenced strings before innerHTML interpolation.
+      const beachDisplay = esc(beachDisplayRaw);
+      const qualityInfo = esc(qualityInfoRaw);
+      const qualityUpdated = esc(qualityUpdatedRaw);
+      const jellyfishSpecies = jellyfishSpeciesRaw ? esc(jellyfishSpeciesRaw) : null;
+      const waterTemp = esc(waterTempRaw);
+      const airTemp = esc(airTempRaw);
+      const uv = esc(uvFmt);
+      const waves = esc(wavesRaw);
+      const wind = esc(windRaw);
+      const sky = esc(skyRaw);
 
       // Ensure outer ha-card exists once
       if (!this._card) {
@@ -316,7 +423,7 @@
         }
 
         <div class="cb-quality" style="border-color:${qColor};background:${qColor}1a">
-          <span class="cb-quality-label">Water Quality</span>
+          <span class="cb-quality-label">${t.water_quality}</span>
           <span class="cb-quality-value" style="color:${qColor}">${qualityDisplay}</span>
           ${!compact && qualityInfo ? `<span class="cb-quality-info">${qualityInfo}</span>` : ""}
         </div>
@@ -324,14 +431,14 @@
         ${
           cfg.show_conditions
             ? `<div class="cb-section">
-                 ${!compact ? '<div class="cb-section-title">Conditions</div>' : ""}
+                 ${!compact ? `<div class="cb-section-title">${t.conditions}</div>` : ""}
                  <div class="cb-grid">
-                   ${this._condCell("🌡️", "Water", waterTemp)}
-                   ${this._condCell("🌤️", "Air", airTemp)}
-                   ${this._condCell("☀️", "UV", `<span style="color:${uvCss}">${uv}</span>`)}
-                   ${this._condCell("🌊", "Waves", waves)}
-                   ${this._condCell("💨", "Wind", wind)}
-                   ${this._condCell("🌥️", "Sky", sky)}
+                   ${this._condCell("🌡️", t.water, waterTemp)}
+                   ${this._condCell("🌤️", t.air, airTemp)}
+                   ${this._condCell("☀️", t.uv, `<span style="color:${uvCss}">${uv}</span>`)}
+                   ${this._condCell("🌊", t.waves, waves)}
+                   ${this._condCell("💨", t.wind, wind)}
+                   ${this._condCell("🌥️", t.sky, sky)}
                  </div>
                </div>`
             : ""
@@ -340,13 +447,13 @@
         ${
           cfg.show_safety
             ? `<div class="cb-section">
-                 ${!compact ? '<div class="cb-section-title">Safety</div>' : ""}
+                 ${!compact ? `<div class="cb-section-title">${t.safety}</div>` : ""}
                  <div class="cb-safety">
-                   ${this._safetyRow("👮", "Lifeguard", lifeguard, false)}
-                   ${this._safetyRow("✅", "Water OK", wqGood, false)}
-                   ${this._jellyfishRow(jellyfishDisplay, jellyfishAlert)}
-                   ${this._safetyRow("🌧️", "Rain risk high", rainRisk, true)}
-                   ${!compact ? this._safetyRow("📅", "Off season", offSeason, true) : ""}
+                   ${this._safetyRow("👮", t.lifeguard, lifeguard, false)}
+                   ${this._safetyRow("✅", t.water_ok, wqGood, false)}
+                   ${this._jellyfishRow(jellyfishDisplay, jellyfishAlert, t.jellyfish)}
+                   ${this._safetyRow("🌧️", t.rain_risk, rainRisk, true)}
+                   ${!compact ? this._safetyRow("📅", t.off_season, offSeason, true) : ""}
                  </div>
                </div>`
             : ""
@@ -356,10 +463,10 @@
           cfg.show_details &&
           (qualityInfo || jellyfishSpecies || qualityUpdated)
             ? `<div class="cb-section cb-details">
-                 ${!compact ? '<div class="cb-section-title">Details</div>' : ""}
-                 ${qualityInfo ? `<div class="cb-detail-row"><span>Quality info</span><span>${qualityInfo}</span></div>` : ""}
-                 ${jellyfishSpecies ? `<div class="cb-detail-row"><span>Jellyfish species</span><span>${jellyfishSpecies}</span></div>` : ""}
-                 ${qualityUpdated ? `<div class="cb-detail-row"><span>Quality updated</span><span>${qualityUpdated}</span></div>` : ""}
+                 ${!compact ? `<div class="cb-section-title">${t.details}</div>` : ""}
+                 ${qualityInfo ? `<div class="cb-detail-row"><span>${t.quality_info}</span><span>${qualityInfo}</span></div>` : ""}
+                 ${jellyfishSpecies ? `<div class="cb-detail-row"><span>${t.jellyfish_species}</span><span>${jellyfishSpecies}</span></div>` : ""}
+                 ${qualityUpdated ? `<div class="cb-detail-row"><span>${t.quality_updated}</span><span>${qualityUpdated}</span></div>` : ""}
                </div>`
             : ""
         }
@@ -368,7 +475,7 @@
 
     _condCell(icon, lbl, value) {
       return `<div class="cb-cond">
-        <span class="cb-cond-icon">${icon}</span>
+        <span class="cb-cond-icon" role="img" aria-hidden="true">${icon}</span>
         <span class="cb-cond-label">${lbl}</span>
         <span class="cb-cond-value">${value}</span>
       </div>`;
@@ -396,18 +503,18 @@
       }
 
       return `<div class="cb-safety-row">
-        <span>${icon} ${lbl}</span>
+        <span><span role="img" aria-hidden="true">${icon}</span> ${lbl}</span>
         <span class="cb-safety-val" style="color:${color}">${display}</span>
       </div>`;
     }
 
-    _jellyfishRow(jellyfishDisplay, alertState) {
+    _jellyfishRow(jellyfishDisplay, alertState, lbl) {
       let color = "var(--secondary-text-color, #888)";
       if (alertState === "on") color = "var(--error-color, #c62828)";
       else if (alertState === "off") color = "var(--success-color, #2e7d32)";
 
       return `<div class="cb-safety-row">
-        <span>🪼 Jellyfish</span>
+        <span><span role="img" aria-hidden="true">🪼</span> ${lbl}</span>
         <span class="cb-safety-val" style="color:${color}">${jellyfishDisplay}</span>
       </div>`;
     }
