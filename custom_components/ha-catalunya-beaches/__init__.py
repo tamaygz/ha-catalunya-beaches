@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
@@ -55,10 +56,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the card JS file as a static HTTP endpoint (runs once per domain load)."""
     www_path = Path(__file__).parent / "www"
     if www_path.is_dir():
-        hass.http.register_static_path(
-            _CARD_STATIC_PATH,
-            str(www_path),
-            cache_headers=False,
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(_CARD_STATIC_PATH, str(www_path), cache_headers=False)]
         )
         LOGGER.debug(
             "Catalunya Beaches: serving frontend resources from %s at %s",
