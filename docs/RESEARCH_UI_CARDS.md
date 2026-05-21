@@ -85,9 +85,38 @@ Source: https://github.com/Clooos/Bubble-Card (README).
   - Refresh button
   - Service calls for `refresh_all` / `refresh_beach`
 
+## NSW Beachwatch-inspired layouts (adapted to our data)
+Based on the dashboard examples in https://github.com/PlanetCitizen1829381/ha-nsw-beachwatch, the following patterns map well to this integration (using Bubble Card where possible).
+
+### 1) Short advice card (Bubble Card + card-mod)
+**Goal:** A compact status banner that highlights current conditions.  
+**Adaptation:** Use `sensor.<beach>_water_quality` or `sensor.<beach>_beach_info` as the main state.  
+**Visual cues:** Color the icon background based on `binary_sensor.<beach>_water_quality_good`, `binary_sensor.<beach>_jellyfish_alert`, or `binary_sensor.<beach>_rain_risk_high`.  
+**Use available icons:** Show `icon_water_*` and `icon_jellyfish_*` URLs as inline images in a Markdown block beneath the Bubble Card.
+
+### 2) Extended advice card (Bubble Card + Entities)
+**Goal:** Large informative card with detailed context.  
+**Adaptation:** Vertical stack:
+- **Bubble Card button**: status + icon, use `sensor.<beach>_beach_info` or `sensor.<beach>_water_quality`.
+- **Entities card**: list `water_temperature`, `air_temperature`, `uv_index`, `wave_height`, `wind_speed`, `sky_condition`.
+- **Attributes section**: `test_date`, `test_estado`, `estado_info`, `jellyfish_status` and species list.
+
+### 3) Flat summary card (Entities)
+**Goal:** Compact list of essential metrics.  
+**Adaptation:** Entities card with:
+- `sensor.<beach>_water_temperature`, `sensor.<beach>_air_temperature`
+- `sensor.<beach>_uv_index`, `sensor.<beach>_wave_height`, `sensor.<beach>_wind_speed`
+- `sensor.<beach>_water_quality`, `binary_sensor.<beach>_jellyfish_alert`
+- Attributes: `test_date`, `estado_info`
+
+### 4) Map card (optional, if coords exposed)
+**Goal:** Multi-beach overview with state labels.  
+**Adaptation:** Map card with each beach entity, `label_mode: state`.  
+**Requires:** latitude/longitude attributes or a dedicated geo entity.
+
 ## Visualization ideas using existing data
 1. **Image-centric tile**: use `entity_picture` + beach name as a hero header.
-2. **Icon strip**: show official water/jellyfish icon URLs in markdown or custom button-card.
+2. **Icon strip**: show official water/jellyfish icon URLs (`icon_water_*`, `icon_jellyfish_*`) in markdown or picture-elements.
 3. **Risk ribbon**: color-coded badges based on binary sensors (lifeguard, rain risk, out of season).
 4. **Trend section**: water temp + wind speed + UV history graph.
 5. **Data freshness**: surface `last_fetched` attribute from refresh button or coordinator.
