@@ -37,13 +37,12 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     _HTTP_OK_STATUS = 200
     _ASSET_REQUEST_TIMEOUT_SECONDS = 15
     _MAX_ASSET_BYTES = 5 * 1024 * 1024
+    _CACHE_CONCURRENCY = 4
+    _ALLOWED_CONTENT_TYPES = frozenset({"image/jpeg", "image/png", "image/gif", "image/webp"})
     _ASSET_BASE_URLS = (
         "https://aca-web.gencat.cat/images/platges/",
-        "http://aca-web.gencat.cat/images/platges/",
         "https://aplicacions.aca.gencat.cat/platges/AppJava/images/platges/",
-        "http://aplicacions.aca.gencat.cat/platges/AppJava/images/platges/",
         "https://aplicacions.aca.gencat.cat/platges/AppJava/images/iconos/",
-        "http://aplicacions.aca.gencat.cat/platges/AppJava/images/iconos/",
     )
 
     def __init__(
@@ -67,6 +66,8 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
             name=f"{DOMAIN}_{self.beach_id}",
             update_interval=timedelta(seconds=update_interval),
         )
+        self._cache_lock = asyncio.Lock()
+        self._last_referenced_files: set[str] = set()
 
     async def _async_update_data(self) -> BeachInfo:
         """Fetch beach data from API.
@@ -80,7 +81,8 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
         try:
             client = self.config_entry.runtime_data.client
             beach_info = await client.async_get_beach_detail(self.beach_id)
-            await self._async_cache_assets(beach_info)
+            async with self._cache_lock:
+                await self._async_cache_assets(beach_info)
 
             LOGGER.debug(
                 "Successfully updated data for beach %s (%s)",
@@ -136,19 +138,22 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
 
     async def _async_cache_assets(self, beach_info: BeachInfo) -> None:
         """Cache remote beach assets locally and replace URLs with local static URLs."""
+        sem = asyncio.Semaphore(self._CACHE_CONCURRENCY)
+
+        async def _bounded(asset: str) -> str:
+            async with sem:
+                return await self._async_cache_single_asset(asset)
+
         if beach_info.imagenes:
-            beach_info.imagenes = await asyncio.gather(
-                *(
-                    self._async_cache_single_asset(asset)
-                    for asset in beach_info.imagenes
-                )
+            beach_info.imagenes = list(
+                await asyncio.gather(*(_bounded(a) for a in beach_info.imagenes))
             )
 
         if beach_info.iconos:
             icon_keys = list(beach_info.iconos.keys())
             icon_values = list(beach_info.iconos.values())
-            cached_icons = await asyncio.gather(
-                *(self._async_cache_single_asset(asset) for asset in icon_values)
+            cached_icons = list(
+                await asyncio.gather(*(_bounded(a) for a in icon_values))
             )
             beach_info.iconos = dict(zip(icon_keys, cached_icons, strict=True))
 
@@ -164,7 +169,9 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
 
         # Prune cached files that are no longer referenced by the current API response
         referenced_files = self._collect_local_filenames(beach_info)
-        await self._async_prune_cache(referenced_files)
+        if referenced_files != self._last_referenced_files:
+            self._last_referenced_files = referenced_files
+            await self._async_prune_cache(referenced_files)
 
     def _collect_local_filenames(self, beach_info: BeachInfo) -> set[str]:
         """Collect filenames of all locally cached assets referenced by beach_info."""
@@ -283,15 +290,15 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
                                 content_length_int,
                             )
                             continue
-                    content_type = response.headers.get("Content-Type", "")
-                    if not content_type.startswith("image/"):
+                    content_type = response.headers.get("Content-Type", "").split(";")[0].strip()
+                    if content_type not in self._ALLOWED_CONTENT_TYPES:
                         LOGGER.debug(
                             "Skipping non-image asset response from %s (%s)",
                             candidate_url,
                             content_type,
                         )
                         continue
-                    content = await response.read()
+                    content = await response.content.read(self._MAX_ASSET_BYTES + 1)
             except (
                 aiohttp.ClientError,
                 OSError,
@@ -336,9 +343,15 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     def _build_candidate_urls(self, asset_reference: str) -> list[str]:
         """Build candidate absolute URLs for remote assets."""
         if asset_reference.startswith(("http://", "https://")):
+            # Rewrite http:// to https:// to prevent MITM attacks
+            secure_ref = (
+                "https://" + asset_reference[len("http://"):]
+                if asset_reference.startswith("http://")
+                else asset_reference
+            )
             # Only allow URLs from the known allowlist to prevent SSRF
-            if any(asset_reference.startswith(base) for base in self._ASSET_BASE_URLS):
-                return [asset_reference]
+            if any(secure_ref.startswith(base) for base in self._ASSET_BASE_URLS):
+                return [secure_ref]
             LOGGER.debug(
                 "Ignoring absolute URL not in allowed base URLs: %s", asset_reference
             )

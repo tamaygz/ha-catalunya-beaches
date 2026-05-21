@@ -7,7 +7,7 @@
 (function () {
   "use strict";
 
-  const CARD_VERSION = "1.0.0";
+  const CARD_VERSION = "2.0.0";
   const CARD_TYPE = "catalunya-beaches-card";
 
   // Known entity key suffixes for each platform — longest first for correct prefix extraction.

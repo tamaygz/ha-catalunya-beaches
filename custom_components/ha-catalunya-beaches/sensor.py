@@ -211,8 +211,8 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
         else:
             latitude = self.coordinator.config_entry.data.get(CONF_BEACH_LATITUDE)
             longitude = self.coordinator.config_entry.data.get(CONF_BEACH_LONGITUDE)
-        latitude = parse_coordinate(latitude)
-        longitude = parse_coordinate(longitude)
+        latitude = parse_coordinate(latitude, min_val=-90, max_val=90)
+        longitude = parse_coordinate(longitude, min_val=-180, max_val=180)
         return (latitude, longitude) if latitude is not None and longitude is not None else (None, None)
 
     @property

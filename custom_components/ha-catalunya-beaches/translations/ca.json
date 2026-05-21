@@ -52,6 +52,9 @@
                     "confirm": "Confirmar eliminació"
                 }
             }
+        },
+        "error": {
+            "unknown": "S'ha produït un error inesperat"
         }
     },
     "entity": {

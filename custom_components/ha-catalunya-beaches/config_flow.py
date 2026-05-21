@@ -156,10 +156,14 @@ class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Configure which entities to enable."""
         if user_input is not None:
             latitude = parse_coordinate(
-                self._selected_beach.latitud if self._selected_beach else None
+                self._selected_beach.latitud if self._selected_beach else None,
+                min_val=-90,
+                max_val=90,
             )
             longitude = parse_coordinate(
-                self._selected_beach.longitud if self._selected_beach else None
+                self._selected_beach.longitud if self._selected_beach else None,
+                min_val=-180,
+                max_val=180,
             )
 
             data = {

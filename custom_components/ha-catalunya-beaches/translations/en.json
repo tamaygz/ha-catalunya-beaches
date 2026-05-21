@@ -52,6 +52,9 @@
                     "confirm": "Confirm deletion"
                 }
             }
+        },
+        "error": {
+            "unknown": "Unexpected error occurred"
         }
     },
     "entity": {

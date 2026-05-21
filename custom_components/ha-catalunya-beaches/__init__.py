@@ -48,7 +48,7 @@ _CARD_STATIC_PATH = "/ha-catalunya-beaches-frontend"
 _CARD_FILE_URL = f"{_CARD_STATIC_PATH}/catalunya-beaches-card.js"
 # Bump whenever www/catalunya-beaches-card.js changes to force browser cache invalidation.
 # Keep in sync with CARD_VERSION in www/catalunya-beaches-card.js.
-_CARD_VERSION = "1"
+_CARD_VERSION = "2"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
