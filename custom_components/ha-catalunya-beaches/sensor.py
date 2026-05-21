@@ -383,7 +383,7 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                     attributes["latitude"] = latitude
                     attributes["longitude"] = longitude
 
-                # Summarise current conditions for map usage
+                # Summarize current conditions for map usage
                 warnings: list[str] = []
                 wq = None
                 jf = None
