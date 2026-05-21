@@ -36,6 +36,17 @@ from .const import (
 )
 from .entity import CatalunyaBeachEntity
 
+
+def _parse_coordinate(value: float | str | None) -> float | None:
+    """Parse a coordinate into a float value."""
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -349,16 +360,8 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                         CONF_BEACH_LONGITUDE
                     )
 
-                if isinstance(latitude, str):
-                    try:
-                        latitude = float(latitude)
-                    except ValueError:
-                        latitude = None
-                if isinstance(longitude, str):
-                    try:
-                        longitude = float(longitude)
-                    except ValueError:
-                        longitude = None
+                latitude = _parse_coordinate(latitude)
+                longitude = _parse_coordinate(longitude)
 
                 if latitude is not None and longitude is not None:
                     attributes["latitude"] = latitude
