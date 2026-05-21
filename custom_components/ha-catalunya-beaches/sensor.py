@@ -243,7 +243,7 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
 
             elif key == ENTITY_JELLYFISH_STATUS:
                 if beach_info.medusas:
-                    status = beach_info.medusas.peligrosidad or "Unknown"
+                    status = beach_info.medusas.peligrosidad or "unknown"
                     return JELLYFISH_STATUS.get(status, status)
                 return None
 

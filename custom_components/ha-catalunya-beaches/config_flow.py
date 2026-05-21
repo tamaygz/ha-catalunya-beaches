@@ -333,6 +333,7 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
                     errors["base"] = "unknown"
 
             if user_input.get("delete_history") and not errors:
+                # Preserve options while awaiting delete confirmation.
                 self._pending_options = options
                 return await self.async_step_confirm_delete()
 

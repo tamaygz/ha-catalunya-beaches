@@ -106,6 +106,7 @@ JELLYFISH_STATUS = {
     "High": "high",
     "Very High": "very_high",
     "Unknown": "unknown",
+    "unknown": "unknown",
 }
 
 LIFEGUARD_STATUS = {
