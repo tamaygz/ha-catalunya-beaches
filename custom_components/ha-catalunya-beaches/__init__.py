@@ -33,7 +33,7 @@ SERVICE_REFRESH_BEACH_SCHEMA = vol.Schema(
 )
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import ConfigType, HomeAssistant
 
     from .data import CatalunyaBeachesConfigEntry
 
@@ -46,10 +46,12 @@ PLATFORMS: list[Platform] = [
 # Frontend resource constants
 _CARD_STATIC_PATH = "/ha-catalunya-beaches-frontend"
 _CARD_FILE_URL = f"{_CARD_STATIC_PATH}/catalunya-beaches-card.js"
+# Bump whenever www/catalunya-beaches-card.js changes to force browser cache invalidation.
+# Keep in sync with CARD_VERSION in www/catalunya-beaches-card.js.
 _CARD_VERSION = "1"
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the card JS file as a static HTTP endpoint (runs once per domain load)."""
     www_path = Path(__file__).parent / "www"
     if www_path.is_dir():
@@ -153,17 +155,21 @@ async def async_setup_entry(
     # Register update listener for options changes
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    # Schedule Lovelace resource registration after HA finishes starting
-    async def _do_register(_event: object = None) -> None:
-        await _async_register_lovelace_resource(hass)
+    # Schedule Lovelace resource registration once per domain (not once per beach entry).
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    if not domain_data.get("card_registered"):
+        domain_data["card_registered"] = True
 
-    if hass.is_running:
-        hass.async_create_task(_do_register())
-    else:
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED,
-            lambda e: hass.async_create_task(_do_register()),
-        )
+        async def _do_register(_event: object = None) -> None:
+            await _async_register_lovelace_resource(hass)
+
+        if hass.is_running:
+            hass.async_create_task(_do_register())
+        else:
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED,
+                lambda e: hass.async_create_task(_do_register()),
+            )
 
     return True
 
