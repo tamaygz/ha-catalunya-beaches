@@ -283,6 +283,20 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
         super().__init__()
         self._pending_options: dict[str, Any] | None = None
 
+    @staticmethod
+    def _build_options(
+        user_input: dict[str, Any],
+        current_interval: int,
+        current_entities: list[str],
+    ) -> dict[str, Any]:
+        """Build options payload from user input."""
+        return {
+            CONF_UPDATE_INTERVAL: user_input.get(CONF_UPDATE_INTERVAL, current_interval),
+            CONF_ENABLED_ENTITIES: user_input.get(
+                CONF_ENABLED_ENTITIES, current_entities
+            ),
+        }
+
     async def async_step_init(
         self,
         user_input: dict[str, Any] | None = None,
@@ -308,15 +322,6 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
         )
 
         if user_input is not None:
-            options = {
-                CONF_UPDATE_INTERVAL: user_input.get(
-                    CONF_UPDATE_INTERVAL, current_interval
-                ),
-                CONF_ENABLED_ENTITIES: user_input.get(
-                    CONF_ENABLED_ENTITIES, current_entities
-                ),
-            }
-
             if user_input.get("force_refresh"):
                 # Trigger force refresh. The coordinator is created during setup of the
                 # config entry and stored in `hass.data[DOMAIN][entry_id]`. It's possible
@@ -334,12 +339,18 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
                     errors["base"] = "unknown"
 
             if user_input.get("delete_history") and not errors:
+                options = self._build_options(
+                    user_input, current_interval, current_entities
+                )
                 # Preserve options while awaiting delete confirmation.
                 self._pending_options = options
                 return await self.async_step_confirm_delete()
 
             # If there were no errors (e.g. missing coordinator), update options.
             if not errors:
+                options = self._build_options(
+                    user_input, current_interval, current_entities
+                )
                 return self.async_create_entry(title="", data=options)
 
         return self.async_show_form(
@@ -424,16 +435,11 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Confirm deletion of historical data."""
-        if self._pending_options is None and user_input is None:
+        if self._pending_options is None:
             # Guard against reaching the confirm step without context from configure.
             return await self.async_step_configure()
 
-        # If the confirmation is posted without pending options, fall back to stored values.
-        options = (
-            self._pending_options
-            if self._pending_options is not None
-            else self.config_entry.options
-        )
+        options = self._pending_options
         if user_input is not None:
             if user_input.get("confirm"):
                 # Delete historical data
