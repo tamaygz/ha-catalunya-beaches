@@ -15,6 +15,8 @@ from homeassistant.const import UnitOfTemperature, UnitOfLength, UnitOfSpeed
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    CONF_BEACH_LATITUDE,
+    CONF_BEACH_LONGITUDE,
     CONF_ENABLED_ENTITIES,
     ENTITY_AIR_TEMP,
     ENTITY_BEACH_INFO,
@@ -334,6 +336,33 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                 attributes["beach_id"] = beach_info.id
                 attributes["municipality"] = beach_info.municipio
                 attributes["coast"] = beach_info.costa
+
+                latitude = None
+                longitude = None
+                if beach_info.coordenadas:
+                    latitude, longitude = beach_info.coordenadas
+                else:
+                    latitude = self.coordinator.config_entry.data.get(
+                        CONF_BEACH_LATITUDE
+                    )
+                    longitude = self.coordinator.config_entry.data.get(
+                        CONF_BEACH_LONGITUDE
+                    )
+
+                if isinstance(latitude, str):
+                    try:
+                        latitude = float(latitude)
+                    except ValueError:
+                        latitude = None
+                if isinstance(longitude, str):
+                    try:
+                        longitude = float(longitude)
+                    except ValueError:
+                        longitude = None
+
+                if latitude is not None and longitude is not None:
+                    attributes["latitude"] = latitude
+                    attributes["longitude"] = longitude
 
                 # Add images and icons
                 if beach_info.imagenes:

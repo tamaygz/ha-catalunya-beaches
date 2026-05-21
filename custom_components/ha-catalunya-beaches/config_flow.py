@@ -18,6 +18,8 @@ from .api import (
 )
 from .const import (
     CONF_BEACH_ID,
+    CONF_BEACH_LATITUDE,
+    CONF_BEACH_LONGITUDE,
     CONF_BEACH_NAME,
     CONF_ENABLED_ENTITIES,
     CONF_LANGUAGE,
@@ -46,6 +48,16 @@ from .const import (
     MIN_UPDATE_INTERVAL,
 )
 from .data import BeachListItem
+
+
+def _parse_coordinate(value: str | None) -> float | None:
+    """Parse a coordinate string into a float."""
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -152,17 +164,31 @@ class CatalunyaBeachesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Configure which entities to enable."""
         if user_input is not None:
+            latitude = _parse_coordinate(
+                self._selected_beach.latitud if self._selected_beach else None
+            )
+            longitude = _parse_coordinate(
+                self._selected_beach.longitud if self._selected_beach else None
+            )
+
+            data = {
+                CONF_BEACH_ID: self._selected_beach.id,
+                CONF_BEACH_NAME: self._selected_beach.nombre,
+                CONF_LANGUAGE: self._language,
+                CONF_UPDATE_INTERVAL: user_input.get(
+                    CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                ),
+            }
+
+            if latitude is not None:
+                data[CONF_BEACH_LATITUDE] = latitude
+            if longitude is not None:
+                data[CONF_BEACH_LONGITUDE] = longitude
+
             # Create config entry
             return self.async_create_entry(
                 title=self._selected_beach.nombre,
-                data={
-                    CONF_BEACH_ID: self._selected_beach.id,
-                    CONF_BEACH_NAME: self._selected_beach.nombre,
-                    CONF_LANGUAGE: self._language,
-                    CONF_UPDATE_INTERVAL: user_input.get(
-                        CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
-                    ),
-                },
+                data=data,
                 options={
                     CONF_ENABLED_ENTITIES: user_input.get(
                         CONF_ENABLED_ENTITIES, DEFAULT_ENABLED_ENTITIES

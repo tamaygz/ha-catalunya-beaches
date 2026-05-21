@@ -125,6 +125,10 @@ entities:
   - sensor.platja_de_barcelona_uv_index
 ```
 
+The **Beach Name** sensor includes attributes for municipality, coast, images, icons, and
+latitude/longitude when the API provides coordinates. These coordinates can be reused in
+map cards or templates.
+
 ## Data Source
 
 This integration uses the official Catalan Water Agency (Agència Catalana de l'Aigua) API:

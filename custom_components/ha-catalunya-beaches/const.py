@@ -23,6 +23,8 @@ MAX_UPDATE_INTERVAL = 86400  # 24 hours
 # Configuration keys
 CONF_BEACH_ID = "beach_id"
 CONF_BEACH_NAME = "beach_name"
+CONF_BEACH_LATITUDE = "beach_latitude"
+CONF_BEACH_LONGITUDE = "beach_longitude"
 CONF_UPDATE_INTERVAL = "update_interval"
 CONF_LANGUAGE = "language"
 CONF_ENABLED_ENTITIES = "enabled_entities"
