@@ -7,11 +7,12 @@ https://github.com/tamaygz/ha-catalunya-beaches
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.const import Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -41,6 +42,77 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
 ]
+
+# Frontend resource constants
+_CARD_STATIC_PATH = "/ha-catalunya-beaches-frontend"
+_CARD_FILE_URL = f"{_CARD_STATIC_PATH}/catalunya-beaches-card.js"
+_CARD_VERSION = "1"
+
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Register the card JS file as a static HTTP endpoint (runs once per domain load)."""
+    www_path = Path(__file__).parent / "www"
+    if www_path.is_dir():
+        hass.http.register_static_path(
+            _CARD_STATIC_PATH,
+            str(www_path),
+            cache_headers=False,
+        )
+        LOGGER.debug(
+            "Catalunya Beaches: serving frontend resources from %s at %s",
+            www_path,
+            _CARD_STATIC_PATH,
+        )
+    return True
+
+
+async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
+    """Auto-register the card as a Lovelace module resource if not already present."""
+    versioned_url = f"{_CARD_FILE_URL}?v={_CARD_VERSION}"
+    try:
+        from homeassistant.components.lovelace.resources import (  # noqa: PLC0415
+            ResourceStorageCollection,
+        )
+
+        lovelace_data = hass.data.get("lovelace")
+        if lovelace_data is None:
+            LOGGER.debug(
+                "Catalunya Beaches: Lovelace not initialised; skipping auto-registration."
+                " Add manually: type=module, URL=%s",
+                versioned_url,
+            )
+            return
+
+        resources = lovelace_data.get("resources")
+        if not isinstance(resources, ResourceStorageCollection):
+            LOGGER.debug(
+                "Catalunya Beaches: Lovelace not in storage mode; skipping auto-registration."
+                " Add manually: type=module, URL=%s",
+                versioned_url,
+            )
+            return
+
+        await resources.async_load()
+        if any(
+            item.get("url", "").startswith(_CARD_STATIC_PATH)
+            for item in resources.async_items()
+        ):
+            LOGGER.debug("Catalunya Beaches: card resource already registered.")
+            return
+
+        await resources.async_create_item(
+            {"res_type": "module", "url": versioned_url}
+        )
+        LOGGER.info("Catalunya Beaches: registered card resource %s", versioned_url)
+
+    except Exception as err:  # noqa: BLE001
+        LOGGER.warning(
+            "Catalunya Beaches: could not auto-register Lovelace resource (%s)."
+            " Add manually via Settings → Dashboards → ⋮ → Resources:"
+            " type=module, URL=%s",
+            err,
+            versioned_url,
+        )
 
 
 async def async_setup_entry(
@@ -80,6 +152,18 @@ async def async_setup_entry(
 
     # Register update listener for options changes
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
+    # Schedule Lovelace resource registration after HA finishes starting
+    async def _do_register(_event: object = None) -> None:
+        await _async_register_lovelace_resource(hass)
+
+    if hass.is_running:
+        hass.async_create_task(_do_register())
+    else:
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED,
+            lambda e: hass.async_create_task(_do_register()),
+        )
 
     return True
 
