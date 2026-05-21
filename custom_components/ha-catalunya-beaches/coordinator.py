@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -34,6 +35,7 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
     _STATIC_URL_PREFIX = "/local/" + DOMAIN
     _STATIC_DIR_NAME = DOMAIN
     _HTTP_OK_STATUS = 200
+    _ASSET_REQUEST_TIMEOUT_SECONDS = 15
     _ASSET_BASE_URLS = (
         "https://aca-web.gencat.cat/images/platges/",
         "http://aca-web.gencat.cat/images/platges/",
@@ -133,16 +135,21 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
 
     async def _async_cache_assets(self, beach_info: BeachInfo) -> None:
         """Cache remote beach assets locally and replace URLs with local static URLs."""
-        beach_info.imagenes = await asyncio.gather(
-            *(self._async_cache_single_asset(asset) for asset in beach_info.imagenes)
-        )
+        if beach_info.imagenes:
+            beach_info.imagenes = await asyncio.gather(
+                *(
+                    self._async_cache_single_asset(asset)
+                    for asset in beach_info.imagenes
+                )
+            )
 
-        icon_keys = list(beach_info.iconos.keys())
-        icon_values = list(beach_info.iconos.values())
-        cached_icons = await asyncio.gather(
-            *(self._async_cache_single_asset(asset) for asset in icon_values)
-        )
-        beach_info.iconos = dict(zip(icon_keys, cached_icons, strict=True))
+        if beach_info.iconos:
+            icon_keys = list(beach_info.iconos.keys())
+            icon_values = list(beach_info.iconos.values())
+            cached_icons = await asyncio.gather(
+                *(self._async_cache_single_asset(asset) for asset in icon_values)
+            )
+            beach_info.iconos = dict(zip(icon_keys, cached_icons, strict=True))
 
         if beach_info.calidad_playa and beach_info.calidad_playa.icono:
             beach_info.calidad_playa.icono = await self._async_cache_single_asset(
@@ -166,6 +173,9 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
             filename = Path(urlparse(candidate_url).path).name
             if not filename:
                 continue
+            filename = re.sub(r"[^A-Za-z0-9_.()-]", "_", filename)
+            if not filename or filename in {".", ".."}:
+                continue
 
             local_path = (
                 Path(self.hass.config.path("www"))
@@ -180,7 +190,10 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
 
             session = async_get_clientsession(self.hass)
             try:
-                async with session.get(candidate_url) as response:
+                async with session.get(
+                    candidate_url,
+                    timeout=aiohttp.ClientTimeout(total=self._ASSET_REQUEST_TIMEOUT_SECONDS),
+                ) as response:
                     if response.status != self._HTTP_OK_STATUS:
                         continue
                     content_type = response.headers.get("Content-Type", "")
