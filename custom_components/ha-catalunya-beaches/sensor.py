@@ -338,10 +338,6 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                         attributes["last_update"] = (
                             beach_info.calidad_playa.timestamp.isoformat()
                         )
-                latitude, longitude = self._resolve_coordinates(beach_info)
-                if latitude is not None:
-                    attributes["latitude"] = latitude
-                    attributes["longitude"] = longitude
 
             elif key == ENTITY_JELLYFISH_STATUS:
                 if beach_info.medusas:
@@ -354,10 +350,6 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                         attributes["last_update"] = (
                             beach_info.medusas.fecha_modificacion.isoformat()
                         )
-                latitude, longitude = self._resolve_coordinates(beach_info)
-                if latitude is not None:
-                    attributes["latitude"] = latitude
-                    attributes["longitude"] = longitude
 
             elif key == ENTITY_WATER_TEMP and beach_info.ultimos_analisis:
                 latest = beach_info.ultimos_analisis[0]
@@ -390,6 +382,38 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
                 if latitude is not None:
                     attributes["latitude"] = latitude
                     attributes["longitude"] = longitude
+
+                # Summarise current conditions for map usage
+                warnings: list[str] = []
+                wq = None
+                jf = None
+
+                if beach_info.calidad_playa:
+                    wq = WATER_QUALITY_STATUS.get(
+                        beach_info.calidad_playa.estado
+                    )
+                    attributes["water_quality"] = wq
+                    if wq in ("poor", "very_poor"):
+                        warnings.append("Water quality: " + wq)
+
+                if beach_info.medusas:
+                    jf = JELLYFISH_STATUS.get(
+                        beach_info.medusas.peligrosidad or "unknown",
+                        "unknown",
+                    )
+                    attributes["jellyfish"] = jf
+                    if jf in ("high", "very_high"):
+                        warnings.append("Jellyfish: " + jf)
+                    elif jf == "moderate":
+                        warnings.append("Jellyfish: moderate")
+
+                if beach_info.fora_temporada:
+                    warnings.append("Out of season")
+
+                attributes["active_warnings"] = warnings
+                attributes["beach_status"] = (
+                    ", ".join(warnings) if warnings else "OK"
+                )
 
                 # Add images and icons
                 if beach_info.imagenes:
@@ -452,3 +476,41 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
             return f"https://aca-web.gencat.cat/images/platges/{image_url}"
 
         return None
+
+    @property
+    def icon(self) -> str | None:
+        """Return a dynamic icon for the beach name sensor based on warnings."""
+        if self.entity_description.key != ENTITY_BEACH_NAME:
+            return self.entity_description.icon
+
+        if not self.coordinator.data:
+            return "mdi:beach"
+
+        beach_info = self.coordinator.data
+        result = "mdi:beach"
+
+        # Priority: jellyfish high/very_high > poor water > jellyfish moderate
+        # > out of season > default beach
+        jf = None
+        if beach_info.medusas:
+            jf = JELLYFISH_STATUS.get(
+                beach_info.medusas.peligrosidad or "unknown",
+                "unknown",
+            )
+
+        wq = None
+        if beach_info.calidad_playa:
+            wq = WATER_QUALITY_STATUS.get(
+                beach_info.calidad_playa.estado
+            )
+
+        if jf in ("high", "very_high"):
+            result = "mdi:jellyfish"
+        elif wq in ("poor", "very_poor"):
+            result = "mdi:water-alert"
+        elif jf == "moderate":
+            result = "mdi:jellyfish-outline"
+        elif beach_info.fora_temporada:
+            result = "mdi:calendar-remove"
+
+        return result

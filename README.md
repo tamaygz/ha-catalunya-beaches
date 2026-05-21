@@ -132,14 +132,21 @@ title: Catalunya beaches
 auto_fit: true
 entities:
   - entity: sensor.platja_de_barcelona_beach_name
-    name: Platja de Barcelona
-    label_mode: state
+    label_mode: state   # or "icon" for dynamic warning icons
 ```
 
-The **Beach Name** sensor includes attributes for municipality, coast, images, icons, and
-latitude/longitude when coordinates are available from the API (detail response or the
-stored beach list values captured during setup). These coordinates can be reused in map
-cards or templates.
+The **Beach Name** sensor is the single map-capable entity per beach. It includes
+latitude/longitude, a `beach_status` summary attribute ("OK" or comma-separated
+warnings), `active_warnings` list, `water_quality`, and `jellyfish` attributes.
+The sensor icon changes dynamically based on the worst active warning (default
+`mdi:beach`, jellyfish → `mdi:jellyfish`, poor water → `mdi:water-alert`, out of
+season → `mdi:calendar-remove`).
+
+Map pin modes:
+- `label_mode: state` — shows the beach name text
+- `label_mode: icon` — shows the dynamic warning icon
+- `label_mode: attribute` with `attribute: beach_status` — shows warning summary
+- omit `label_mode` — shows the beach photo (`entity_picture`) as the pin image
 
 ### Local media URLs for UI cards
 

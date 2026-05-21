@@ -1,28 +1,57 @@
 # Example: Home Assistant Map Card
-# Shows one or more Catalunya beaches on the built-in map with water quality state labels.
+# Shows Catalunya beaches on the built-in map using the beach_name sensor.
 #
 # Requirements:
 #   - Home Assistant Map Card (built-in, no extra dependencies)
-#   - Coordinates must be available on the sensor (resolved at setup time from the beach
-#     list, or from the detail API response once it is fetched).
+#   - Coordinates available on the beach_name sensor (resolved at setup
+#     from the beach list, or from the detail API response).
 #
-# Which entity to use:
-#   sensor.<beach>_water_quality   → label shows "Excellent / Good / Acceptable / Poor"
-#   sensor.<beach>_beach_name      → label shows the beach name text
+# Map pin modes (pick one per entity):
+#   label_mode: state      → shows the beach name text on the pin
+#   label_mode: icon       → shows a dynamic warning icon (beach/jellyfish/water-alert)
+#   label_mode: attribute  → shows the value of `attribute:` on the pin
+#   (omit label_mode)      → shows entity_picture (beach photo) as pin image
+#
+# Only beach_name sensors carry coordinates — other sensors no longer have
+# lat/long attributes, so one pin per beach appears on the map.
 #
 # Replace YOUR_BEACH_SLUG with the entity slug for your beach, e.g.:
 #   platja_de_barcelona, platja_de_la_nova_mar_bella, …
 
+# --- Variant A: Beach name labels ---
 type: map
-title: Catalunya Beaches – Water Quality
-theme_mode: auto        # follows HA theme (light / dark)
-auto_fit: true          # viewport auto-fits all markers
+title: Catalunya Beaches
+theme_mode: auto
+auto_fit: true
 grid_options:
   columns: full
   rows: 6
 entities:
-  - entity: sensor.YOUR_BEACH_SLUG_1_water_quality   # Replace
-    label_mode: state                                 # shows quality level on the pin
-  - entity: sensor.YOUR_BEACH_SLUG_2_water_quality   # Replace
+  - entity: sensor.YOUR_BEACH_SLUG_1_beach_name
     label_mode: state
-  # Add more beaches as needed
+  - entity: sensor.YOUR_BEACH_SLUG_2_beach_name
+    label_mode: state
+
+# --- Variant B: Dynamic warning icons ---
+# type: map
+# title: Catalunya Beaches – Warnings
+# theme_mode: auto
+# auto_fit: true
+# entities:
+#   - entity: sensor.YOUR_BEACH_SLUG_1_beach_name
+#     label_mode: icon    # icon changes with active warnings
+#   - entity: sensor.YOUR_BEACH_SLUG_2_beach_name
+#     label_mode: icon
+
+# --- Variant C: Status summary labels ---
+# type: map
+# title: Catalunya Beaches – Status
+# theme_mode: auto
+# auto_fit: true
+# entities:
+#   - entity: sensor.YOUR_BEACH_SLUG_1_beach_name
+#     label_mode: attribute
+#     attribute: beach_status   # shows "OK" or comma-separated warnings
+#   - entity: sensor.YOUR_BEACH_SLUG_2_beach_name
+#     label_mode: attribute
+#     attribute: beach_status
