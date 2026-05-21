@@ -279,7 +279,7 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for Catalunya Beaches."""
 
     def __init__(self) -> None:
-        """Initialize the options flow."""
+        """Initialize the options flow with pending state for multi-step actions."""
         super().__init__()
         self._pending_options: dict[str, Any] | None = None
 
@@ -427,6 +427,7 @@ class CatalunyaBeachesOptionsFlow(config_entries.OptionsFlow):
         if self._pending_options is None and user_input is None:
             return await self.async_step_configure()
 
+        # If the confirmation is posted without pending options, fall back to stored values.
         options = (
             self._pending_options
             if self._pending_options is not None
