@@ -66,6 +66,17 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ENTITY_WATER_QUALITY: SensorEntityDescription(
         key=ENTITY_WATER_QUALITY,
         name="Water Quality",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "excellent",
+            "good",
+            "acceptable",
+            "poor",
+            "very_poor",
+            "out_of_season",
+            "unknown",
+        ],
+        translation_key=ENTITY_WATER_QUALITY,
         icon="mdi:water-check",
     ),
     ENTITY_UV_INDEX: SensorEntityDescription(
@@ -97,6 +108,17 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ENTITY_JELLYFISH_STATUS: SensorEntityDescription(
         key=ENTITY_JELLYFISH_STATUS,
         name="Jellyfish Status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "none",
+            "low",
+            "moderate",
+            "high",
+            "very_high",
+            "out_of_season",
+            "unknown",
+        ],
+        translation_key=ENTITY_JELLYFISH_STATUS,
         icon="mdi:jellyfish",
     ),
     ENTITY_LAST_TEST_DATE: SensorEntityDescription(
@@ -221,7 +243,7 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
             elif key == ENTITY_WATER_QUALITY:
                 if beach_info.calidad_playa:
                     estado = beach_info.calidad_playa.estado
-                    return WATER_QUALITY_STATUS.get(estado, estado)
+                    return WATER_QUALITY_STATUS.get(estado, "unknown")
                 return None
 
             elif key == ENTITY_UV_INDEX:
@@ -259,7 +281,7 @@ class CatalunyaBeachSensor(CatalunyaBeachEntity, SensorEntity):
             elif key == ENTITY_JELLYFISH_STATUS:
                 if beach_info.medusas:
                     status = beach_info.medusas.peligrosidad or "unknown"
-                    return JELLYFISH_STATUS.get(status, status)
+                    return JELLYFISH_STATUS.get(status, "unknown")
                 return None
 
             elif key == ENTITY_LAST_TEST_DATE:
