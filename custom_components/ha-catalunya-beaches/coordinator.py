@@ -133,14 +133,16 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
 
     async def _async_cache_assets(self, beach_info: BeachInfo) -> None:
         """Cache remote beach assets locally and replace URLs with local static URLs."""
-        beach_info.imagenes = [
-            await self._async_cache_single_asset(asset) for asset in beach_info.imagenes
-        ]
+        beach_info.imagenes = await asyncio.gather(
+            *(self._async_cache_single_asset(asset) for asset in beach_info.imagenes)
+        )
 
-        beach_info.iconos = {
-            key: await self._async_cache_single_asset(asset)
-            for key, asset in beach_info.iconos.items()
-        }
+        icon_keys = list(beach_info.iconos.keys())
+        icon_values = list(beach_info.iconos.values())
+        cached_icons = await asyncio.gather(
+            *(self._async_cache_single_asset(asset) for asset in icon_values)
+        )
+        beach_info.iconos = dict(zip(icon_keys, cached_icons, strict=False))
 
         if beach_info.calidad_playa and beach_info.calidad_playa.icono:
             beach_info.calidad_playa.icono = await self._async_cache_single_asset(
@@ -183,6 +185,11 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
                         continue
                     content_type = response.headers.get("Content-Type", "")
                     if not content_type.startswith("image/"):
+                        LOGGER.debug(
+                            "Skipping non-image asset response from %s (%s)",
+                            candidate_url,
+                            content_type,
+                        )
                         continue
                     content = await response.read()
             except (
@@ -200,15 +207,24 @@ class BeachDataUpdateCoordinator(DataUpdateCoordinator[BeachInfo]):
             if not content:
                 continue
 
-            await asyncio.to_thread(
-                local_path.parent.mkdir,
-                parents=True,
-                exist_ok=True,
-            )
-            await asyncio.to_thread(local_path.write_bytes, content)
+            try:
+                await asyncio.to_thread(
+                    local_path.parent.mkdir,
+                    parents=True,
+                    exist_ok=True,
+                )
+                await asyncio.to_thread(local_path.write_bytes, content)
+            except OSError as exception:  # pragma: no cover - fs protection
+                LOGGER.debug(
+                    "Failed to write cached asset %s: %s",
+                    local_path,
+                    exception,
+                )
+                continue
+
             return local_url
 
-        return candidate_urls[0] if candidate_urls else asset_reference
+        return asset_reference
 
     def _build_candidate_urls(self, asset_reference: str) -> list[str]:
         """Build candidate absolute URLs for remote assets."""
