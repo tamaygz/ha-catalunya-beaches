@@ -165,9 +165,12 @@ async def async_setup_entry(
         if hass.is_running:
             hass.async_create_task(_do_register())
         else:
+            def _schedule_register(_event: object) -> None:
+                hass.add_job(_do_register())
+
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED,
-                lambda e: hass.async_create_task(_do_register()),
+                _schedule_register,
             )
 
     return True
