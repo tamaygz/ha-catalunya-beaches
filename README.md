@@ -1,3 +1,6 @@
+Homeassistant Community Forum Thread: https://community.home-assistant.io/t/barcelona-catalunya-beach-bathing-costal-weather-integration/950046
+
+
 # Catalunya Beaches Integration for Home Assistant
 
 Monitor Catalan beaches with real-time water quality, weather conditions, and safety information from the Catalan Water Agency (Agència Catalana de l'Aigua).
